@@ -1,4 +1,6 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
 
 namespace AltMstestGui.Configuration
 {
@@ -18,6 +20,11 @@ namespace AltMstestGui.Configuration
         {
             get { return (string)this["Folder"]; }
             set { this["Folder"] = value; }
+        }
+
+        internal IList<string> AssemblyNames
+        {
+            get { return Assemblies.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries); }
         }
 
         [ConfigurationProperty("Assemblies", IsRequired = true, IsKey = false)]

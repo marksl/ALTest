@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AltMstestGui.Configuration;
@@ -7,6 +8,48 @@ namespace AltMstestGui
 {
     public static class FolderSync
     {
+        public static IList<ISyncedDestination> Sync(AltMstestSection serviceConfigSection)
+        {
+            var dests = new List<ISyncedDestination>();
+            
+            string destination = serviceConfigSection.Destination;
+            if (destination == null)
+            {
+                throw new InvalidDataException("A destination is required. No destination is specified.");
+            }
+
+            if (!Directory.Exists(destination))
+            {
+                Directory.CreateDirectory(destination);
+            }
+
+            foreach (FolderConfigElement folder in serviceConfigSection.Folders)
+            {
+                // Copy everything from folder.Folder
+                var sourceDir = new DirectoryInfo(folder.Folder);
+
+                var destinationName = GetDestinationName(folder.Folder);
+                string destinationFullPath = Path.Combine(destination, destinationName);
+
+                DirectoryInfo destDir = !Directory.Exists(destinationFullPath)
+                    ? Directory.CreateDirectory(destinationFullPath)
+                    : new DirectoryInfo(destinationFullPath);
+
+                SyncDirectory(sourceDir, destDir);
+
+                var dest = new SyncedDestination();
+                
+                foreach (string ass in folder.AssemblyNames)
+                {
+                    string assemblyFullPath = Path.Combine(destinationFullPath, ass);
+                    dest.AddAssembly(assemblyFullPath);
+                }
+
+                dests.Add(dest);
+            }
+
+            return dests;
+        }
 
         private static void SyncDirectory(DirectoryInfo sourceDir, DirectoryInfo destDir)
         {
@@ -44,32 +87,19 @@ namespace AltMstestGui
             return String.Join("_", folders.Skip(1));
         }
 
-        public static void Sync(AltMstestSection serviceConfigSection)
+        private class SyncedDestination : ISyncedDestination
         {
-            string destination = serviceConfigSection.Destination;
-            if (destination == null)
+            public SyncedDestination()
             {
-                throw new InvalidDataException("A destination is required. No destination is specified.");
+                _ass = new List<string>();
             }
+            private readonly List<string> _ass;
+            
+            public IList<string> AssembliesWithFullPath { get { return _ass; } }
 
-            if (!Directory.Exists(destination))
+            public void AddAssembly(string assemblyFullPath)
             {
-                Directory.CreateDirectory(destination);
-            }
-
-            foreach (FolderConfigElement folder in serviceConfigSection.Folders)
-            {
-                // Copy everything from folder.Folder
-                var sourceDir = new DirectoryInfo(folder.Folder);
-
-                var destinationName = GetDestinationName(folder.Folder);
-                string fullPath = Path.Combine(destination, destinationName);
-
-                DirectoryInfo destDir = !Directory.Exists(fullPath)
-                    ? Directory.CreateDirectory(fullPath)
-                    : new DirectoryInfo(fullPath);
-
-                SyncDirectory(sourceDir, destDir);
+                _ass.Add(assemblyFullPath);
             }
         }
     }
