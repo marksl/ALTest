@@ -4,6 +4,9 @@ using System.IO;
 
 namespace AltMstestGui
 {
+    // Ahh I think it's all failing because it's a static class.
+    //'public static class AssemblyInitializer '
+
     internal class TestRunnerLauncher
     {
         public static void LoadAssembliesAndRunTests(IEnumerable<string> assemblies)

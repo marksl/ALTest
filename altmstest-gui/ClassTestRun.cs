@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
+using Fasterflect;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AltMstestGui
@@ -50,6 +53,8 @@ namespace AltMstestGui
         public List<MethodInfo> TestCleanup { get; set; }
 
         public List<MethodTestRun> TestMethods { get; set; }
+        
+        public delegate object MyMethodInvoker(object obj);
 
         public MethodTestRun AddMethodTestrun(MethodInfo method, ExpectedExceptionAttribute expectedException)
         {
@@ -89,6 +94,11 @@ namespace AltMstestGui
             ClassCleanup.Sort(SortSubClassesFirst());
         }
 
+        bool IsStaticClass
+        {
+            get { return _classType.IsSealed && _classType.IsAbstract; }
+        }
+
         public List<TestResult> Run(MyTestContext context)
         {
             var results = new List<TestResult>(100);
@@ -99,62 +109,71 @@ namespace AltMstestGui
                 classInit.Invoke(null, new object[] {context});
             }
 
-            object instance = Activator.CreateInstance(_classType);
-
-            // Initialize the context
-            if (TestContextMethod != null)
+            if (!IsStaticClass)
             {
-                TestContextMethod.SetValue(instance, instance, null);
-            }
+                object instance = Activator.CreateInstance(_classType);
 
-            foreach (var testMethod in TestMethods)
-            {
-                context.Properties["TestName"] = testMethod.Method.Name;
-                
-                // Test Initialize
-                foreach (var testInit in TestInitialize)
+                // Initialize the context
+                if (TestContextMethod != null)
                 {
-                    testInit.Invoke(instance, null);
+                    TestContextMethod.SetValue(instance, instance, null);
                 }
 
-                // TODO... Need to capture the stack trace... hmmm this might be an optional setting.
-                bool success = false;
-                try
+                foreach (var testMethod in TestMethods)
                 {
-NEXT STEP. Just run the tests and see what passes and what fails!!!
+                    context.Properties["TestName"] = testMethod.Method.Name;
 
-                    // Oh boy. Here's the actual execution of the test!!
-                    testMethod.Method.Invoke(instance, null);
-                    success = true;
-                }
-                catch (AssertFailedException)
-                {
-                    success = false;
-                }
-                catch (Exception ex)
-                {
-                    if (testMethod.ExpectedException != null &&
-                        testMethod.ExpectedException.ExceptionType == ex.GetType())
+                    // Test Initialize
+                    foreach (var testInit in TestInitialize)
                     {
+                        instance.CallMethod(testInit.Name, Type.EmptyTypes);
+                    }
+
+                    // TODO... Need to capture the stack trace... hmmm this might be an optional setting.
+                    bool success = false;
+                    try
+                    {
+                        instance.CallMethod(testMethod.Method.Name, Type.EmptyTypes);
                         success = true;
                     }
-                    else
+                    catch (TargetInvocationException tie)
                     {
-                        // TODO: Figure out what these mean..
+                        // I don't think this is hit anymore..
+                        if (testMethod.ExpectedException != null &&
+                            testMethod.ExpectedException.ExceptionType == tie.InnerException.GetType())
+                        {
+                            success = true;
+                        }
+                    }
+                    catch (AssertFailedException)
+                    {
                         success = false;
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        if (testMethod.ExpectedException != null &&
+                            testMethod.ExpectedException.ExceptionType == ex.GetType())
+                        {
+                            success = true;
+                        }
+                        else
+                        {
+                            // TODO: Figure out what these mean..
+                            success = false;
+                        }
+                    }
 
-                results.Add(new TestResult()
-                                {
-                                    TestName = testMethod.Method.Name,
-                                    TestPassed = success
-                                });
+                    results.Add(new TestResult()
+                                    {
+                                        TestName = testMethod.Method.Name,
+                                        TestPassed = success
+                                    });
 
-                // Test Cleanup
-                foreach (var testCleanup in TestCleanup)
-                {
-                    testCleanup.Invoke(instance, new object[] { context });
+                    // Test Cleanup
+                    foreach (var testCleanup in TestCleanup)
+                    {
+                        instance.CallMethod(testCleanup.Name, Type.EmptyTypes);
+                    }
                 }
             }
 

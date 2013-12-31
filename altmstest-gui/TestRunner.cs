@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,9 +12,12 @@ namespace AltMstestGui
     {
         public void RunTests(string assembly)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
             TestRun run = GetTestRunFromAssembly(assembly);
 
             var result = run.Run();
+            stopWatch.Stop();
             if (result != null)
             {
             }
@@ -27,7 +31,13 @@ namespace AltMstestGui
             Assembly ass = Assembly.LoadFile(assembly);
 
             // Get all classes.. no abstract classes.
-            var types = ass.GetTypes().Where(t => t.IsClass && !t.IsAbstract);
+            var allClasses = ass.GetTypes().Where(t => t.IsClass).ToList();
+
+            var types = allClasses.Where(t=>!t.IsAbstract).ToList();
+
+            // Add static classes
+            types.AddRange(allClasses.Where(t=>t.IsSealed && t.IsAbstract));
+
             foreach (var type in types)
             {
                 if (type != null)
@@ -36,7 +46,7 @@ namespace AltMstestGui
                     {
                         ClassTestRun classTestRun = run.AddClassTestRun(type);
 
-                        PropertyInfo prop = type.GetProperty("TestContext");
+                        PropertyInfo prop = type.GetProperty("TestContext", BindingFlags.FlattenHierarchy);
                         if (prop != null && prop.PropertyType == typeof (TestContext))
                         {
                             classTestRun.TestContextMethod = prop;
@@ -52,6 +62,16 @@ namespace AltMstestGui
                                 var expectedException = (ExpectedExceptionAttribute) methodAttributes.FirstOrDefault(c => c as ExpectedExceptionAttribute != null);
 
                                 classTestRun.AddMethodTestrun(method, expectedException);
+                            }
+
+                            if (methodAttributes.Any(c => c as AssemblyInitializeAttribute != null))
+                            {
+                                run.AssemblyInitialize.Add(method);
+                            }
+
+                            if (methodAttributes.Any(c => c as AssemblyCleanupAttribute != null))
+                            {
+                                run.AssemblyCleanup.Add(method);
                             }
 
                             if (methodAttributes.Any(c => c as TestInitializeAttribute != null))

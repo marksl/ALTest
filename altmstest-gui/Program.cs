@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using AltMstestGui.Configuration;
 using AltMstestGui.Properties;
@@ -24,10 +25,17 @@ namespace AltMstestGui
             };
             menuItem1.Click += (sender, e) =>
                                    {
-                                       IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection);
+                                       var t = new Thread(
+                                           () =>
+                                               {
+                                                   IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection);
 
-                                       var assemblies = synced.SelectMany(a => a.AssembliesWithFullPath);
-                                       TestRunnerLauncher.LoadAssembliesAndRunTests(assemblies);   
+                                                   var assemblies = synced.SelectMany(a => a.AssembliesWithFullPath);
+                                                   TestRunnerLauncher.LoadAssembliesAndRunTests(assemblies);   
+                                               }
+                                           ) {Name = "My test"};
+
+                                       t.Start();
                                    };
 
             var contextMenu1 = new ContextMenu();

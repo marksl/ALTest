@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -32,6 +33,7 @@ namespace AltMstestGui
         public List<TestResult> Run()
         {
             var results = new List<TestResult>();
+           
             var context = new MyTestContext();
 
             // Assembly initialize
@@ -39,6 +41,7 @@ namespace AltMstestGui
             {
                 assemblyInit.Invoke(null, new object[] {context});
             }
+            
 
             // Run tests for each class.
             foreach (List<TestResult> classResults in Classes.Select(c => c.Run(context)))
