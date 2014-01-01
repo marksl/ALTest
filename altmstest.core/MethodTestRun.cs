@@ -1,11 +1,11 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AltMstestGui
+namespace altmstest.core
 {
     public class MethodTestRun
     {
-        public ExpectedExceptionAttribute ExpectedException { get; set; }
         public MethodInfo Method { get; set; }
+        public ExpectedExceptionAttribute ExpectedException { get; set; }
     }
 }

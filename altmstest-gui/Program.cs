@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using AltMstest.Core;
 using AltMstestGui.Configuration;
 using AltMstestGui.Properties;
 
@@ -17,6 +18,7 @@ namespace AltMstestGui
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            
             var serviceConfigSection = ConfigurationManager.GetSection("FolderSection") as AltMstestSection;
             var menuItem1 = new MenuItem
             {
@@ -37,9 +39,15 @@ namespace AltMstestGui
 
                                        t.Start();
                                    };
+            var closeMenuItem = new MenuItem
+            {
+                Index = 0,
+                Text = "Exit"
+            };
+            closeMenuItem.Click += (sender, e) => Application.Exit();
 
             var contextMenu1 = new ContextMenu();
-            contextMenu1.MenuItems.AddRange(new[] { menuItem1 });
+            contextMenu1.MenuItems.AddRange(new[] { menuItem1, closeMenuItem });
 
             new NotifyIcon
             {

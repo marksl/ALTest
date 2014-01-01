@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using AltMstestGui;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
-    // Ahh I think it's all failing because it's a static class.
-    //'public static class AssemblyInitializer '
-
-    internal class TestRunnerLauncher
+    public class TestRunnerLauncher
     {
         public static void LoadAssembliesAndRunTests(IEnumerable<string> assemblies)
         {

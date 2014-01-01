@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AltMstest.Core;
 using AltMstestGui.Configuration;
 
 namespace AltMstestGui
@@ -86,6 +87,7 @@ namespace AltMstestGui
             var folders = folder.Split('\\');
             return String.Join("_", folders.Skip(1));
         }
+
 
         private class SyncedDestination : ISyncedDestination
         {

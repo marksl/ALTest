@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Fasterflect;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using altmstest.core;
 
 namespace AltMstestGui
 {
@@ -126,14 +127,19 @@ namespace AltMstestGui
                     // Test Initialize
                     foreach (var testInit in TestInitialize)
                     {
-                        instance.CallMethod(testInit.Name, Type.EmptyTypes);
+                        Action a = CreateMethod(instance, testInit);
+
+                        RunMethod(a);
                     }
 
                     // TODO... Need to capture the stack trace... hmmm this might be an optional setting.
                     bool success = false;
                     try
                     {
-                        instance.CallMethod(testMethod.Method.Name, Type.EmptyTypes);
+                        Action a = CreateMethod(instance, testMethod.Method);
+
+                        RunMethod(a);
+
                         success = true;
                     }
                     catch (TargetInvocationException tie)
@@ -172,7 +178,9 @@ namespace AltMstestGui
                     // Test Cleanup
                     foreach (var testCleanup in TestCleanup)
                     {
-                        instance.CallMethod(testCleanup.Name, Type.EmptyTypes);
+                        Action a = CreateMethod(instance, testCleanup);
+
+                        RunMethod(a);
                     }
                 }
             }
@@ -184,6 +192,16 @@ namespace AltMstestGui
             }
 
             return results;
+        }
+
+        private static void RunMethod(Action a)
+        {
+            a();
+        }
+
+        private static Action CreateMethod(object instance, MethodInfo testMethod)
+        {
+            return (Action)Delegate.CreateDelegate(typeof(Action), instance, testMethod, true);
         }
     }
 }
