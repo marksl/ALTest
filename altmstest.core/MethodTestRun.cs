@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace altmstest.core
+namespace AltMstest.Core
 {
     public class MethodTestRun
     {

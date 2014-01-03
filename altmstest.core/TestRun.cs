@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using AltMstestGui;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
-    [Serializable]
-    public class TestResult : MarshalByRefObject
-    {
-        public string TestName { get; set; }
-        public bool TestPassed { get; set; }
-    }
-
     public class TestRun
     {
         public TestRun()
@@ -36,23 +29,29 @@ namespace AltMstestGui
            
             var context = new MyTestContext();
 
-            // Assembly initialize
-            foreach (var assemblyInit in AssemblyInitialize)
+            using (AppConfig.Change(_configFile))
             {
-                assemblyInit.Invoke(null, new object[] {context});
-            }
-            
+                // Assembly initialize
+                foreach (var assemblyInit in AssemblyInitialize)
+                {
+                    assemblyInit.Invoke(null, new object[] {context});
+                }
 
-            // Run tests for each class.
-            foreach (List<TestResult> classResults in Classes.Select(c => c.Run(context)))
-            {
-                results.AddRange(classResults);
-            }
+                var l = new object();
 
-            // Assembly cleanup
-            foreach (var assemblyInit in AssemblyCleanup)
-            {
-                assemblyInit.Invoke(null, null);
+                foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run(context)))
+                {
+                    lock (l)
+                    {
+                        results.AddRange(classResults);
+                    }
+                }
+
+                // Assembly cleanup
+                foreach (var assemblyInit in AssemblyCleanup)
+                {
+                    assemblyInit.Invoke(null, null);
+                }
             }
 
             return results;
@@ -63,5 +62,11 @@ namespace AltMstestGui
         public List<MethodInfo> AssemblyCleanup { get; set; }
 
         public List<ClassTestRun> Classes { get; private set; }
+
+        private string _configFile;
+        public void SetConfigFile(string configFilePath)
+        {
+            _configFile = configFilePath;
+        }
     }
 }

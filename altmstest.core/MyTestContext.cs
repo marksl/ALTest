@@ -5,11 +5,11 @@ using System.Data;
 using System.Data.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
     public class MyTestContext : TestContext
     {
-        private Dictionary<string, string> dict = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> dict = new Dictionary<string, string>();
 
         public override void WriteLine(string format, params object[] args)
         {

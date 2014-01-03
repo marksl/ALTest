@@ -2,14 +2,13 @@
 using System.Configuration;
 using System.Linq;
 using AltMstest.Core;
-using AltMstestGui;
 using AltMstestGui.Configuration;
 
 namespace altmstest.console
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var serviceConfigSection = ConfigurationManager.GetSection("FolderSection") as AltMstestSection;
 

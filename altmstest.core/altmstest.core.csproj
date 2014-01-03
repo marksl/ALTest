@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="AppConfig.cs" />
     <Compile Include="ClassTestRun.cs" />
     <Compile Include="Configuration\AltMstestSection.cs" />
     <Compile Include="Configuration\FolderConfigCollection.cs" />
@@ -54,6 +54,7 @@
     <Compile Include="MethodTestRun.cs" />
     <Compile Include="MyTestContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestResult.cs" />
     <Compile Include="TestRun.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="TestRunnerLauncher.cs" />

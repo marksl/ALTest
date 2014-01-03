@@ -1,15 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
     [Serializable]
     public class TestRunner : MarshalByRefObject
     {
+        private static readonly Dictionary<string, Assembly> asses = new Dictionary<string, Assembly>();
+        private static readonly object assesLock = new object();
+
         public void RunTests(string assembly)
         {
             var stopWatch = new Stopwatch();
@@ -33,10 +37,16 @@ namespace AltMstestGui
             // Get all classes.. no abstract classes.
             var allClasses = ass.GetTypes().Where(t => t.IsClass).ToList();
 
-            var types = allClasses.Where(t=>!t.IsAbstract).ToList();
+            var types = allClasses.Where(t => !t.IsAbstract).ToList();
 
             // Add static classes
-            types.AddRange(allClasses.Where(t=>t.IsSealed && t.IsAbstract));
+            types.AddRange(allClasses.Where(t => t.IsSealed && t.IsAbstract));
+
+            var configFilePath = ass.Location + ".config";
+            if (File.Exists(configFilePath))
+            {
+                run.SetConfigFile(configFilePath);
+            }
 
             foreach (var type in types)
             {
@@ -59,7 +69,8 @@ namespace AltMstestGui
 
                             if (methodAttributes.Any(c => c as TestMethodAttribute != null))
                             {
-                                var expectedException = (ExpectedExceptionAttribute) methodAttributes.FirstOrDefault(c => c as ExpectedExceptionAttribute != null);
+                                var expectedException =
+                                    (ExpectedExceptionAttribute) methodAttributes.FirstOrDefault(c => c as ExpectedExceptionAttribute != null);
 
                                 classTestRun.AddMethodTestrun(method, expectedException);
                             }
@@ -106,13 +117,35 @@ namespace AltMstestGui
         private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
         {
             int firstComma = args.Name.IndexOf(',');
+            string dll;
+            if (firstComma == -1)
+            {
+                dll = args.Name + ".dll";
+            }
+            else
+            {
+                dll = args.Name.Substring(0, firstComma) + ".dll";
+            }
 
-            string dll = args.Name.Substring(0, firstComma) + ".dll";
+            Assembly ass;
 
-            var fileInfo = new FileInfo(args.RequestingAssembly.Location);
+            lock (assesLock)
+            {
+                if (!asses.TryGetValue(dll, out ass))
+                {
+                    if (args.RequestingAssembly != null)
+                    {
+                        var fileInfo = new FileInfo(args.RequestingAssembly.Location);
+                        var fullPath = Path.Combine(fileInfo.DirectoryName, dll);
+                        ass = Assembly.LoadFile(fullPath);
+                    }
 
-            var fullPath = Path.Combine(fileInfo.DirectoryName, dll);
-            return Assembly.LoadFile(fullPath);
+                    // TODO: This should probably use the Assembly hash as part of the key
+                    asses.Add(dll, ass);
+                }
+            }
+
+            return ass;
         }
     }
 }

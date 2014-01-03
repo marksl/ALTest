@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AltMstestGui;
 
 namespace AltMstest.Core
 {
@@ -12,18 +11,8 @@ namespace AltMstest.Core
             foreach (var assembly in assemblies)
             {
                 var name = Path.GetFileNameWithoutExtension(assembly);
-                var directoryName = Path.GetDirectoryName(assembly);
-                var dirPath = Path.GetFullPath(directoryName);
 
-                var setup = new AppDomainSetup
-                                {
-                                    ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
-                                    PrivateBinPath = dirPath,
-                                    ShadowCopyFiles = "true",
-                                    ShadowCopyDirectories = dirPath,
-                                };
-
-                AppDomain domain = AppDomain.CreateDomain(name + "Domain", AppDomain.CurrentDomain.Evidence, setup);
+                AppDomain domain = AppDomain.CreateDomain(name + "Domain", AppDomain.CurrentDomain.Evidence, AppDomain.CurrentDomain.SetupInformation);
 
                 var scannerType = typeof(TestRunner);
                 var testRunner = (TestRunner)domain.CreateInstanceAndUnwrap(scannerType.Assembly.FullName, scannerType.FullName);

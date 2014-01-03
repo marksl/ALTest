@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AltMstest.Core;
 using AltMstestGui.Configuration;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
     public static class FolderSync
     {
         public static IList<ISyncedDestination> Sync(AltMstestSection serviceConfigSection)
         {
             var dests = new List<ISyncedDestination>();
-            
+
             string destination = serviceConfigSection.Destination;
             if (destination == null)
             {
@@ -33,13 +32,13 @@ namespace AltMstestGui
                 string destinationFullPath = Path.Combine(destination, destinationName);
 
                 DirectoryInfo destDir = !Directory.Exists(destinationFullPath)
-                    ? Directory.CreateDirectory(destinationFullPath)
-                    : new DirectoryInfo(destinationFullPath);
+                                            ? Directory.CreateDirectory(destinationFullPath)
+                                            : new DirectoryInfo(destinationFullPath);
 
                 SyncDirectory(sourceDir, destDir);
 
                 var dest = new SyncedDestination();
-                
+
                 foreach (string ass in folder.AssemblyNames)
                 {
                     string assemblyFullPath = Path.Combine(destinationFullPath, ass);
@@ -82,22 +81,25 @@ namespace AltMstestGui
             }
         }
 
-        static string GetDestinationName(string folder)
+        private static string GetDestinationName(string folder)
         {
             var folders = folder.Split('\\');
             return String.Join("_", folders.Skip(1));
         }
 
-
         private class SyncedDestination : ISyncedDestination
         {
+            private readonly List<string> _ass;
+
             public SyncedDestination()
             {
                 _ass = new List<string>();
             }
-            private readonly List<string> _ass;
-            
-            public IList<string> AssembliesWithFullPath { get { return _ass; } }
+
+            public IList<string> AssembliesWithFullPath
+            {
+                get { return _ass; }
+            }
 
             public void AddAssembly(string assemblyFullPath)
             {

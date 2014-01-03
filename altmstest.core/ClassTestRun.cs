@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
-using System.Reflection.Emit;
-using Fasterflect;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using altmstest.core;
 
-namespace AltMstestGui
+namespace AltMstest.Core
 {
     public class ClassTestRun
     {
@@ -70,6 +66,7 @@ namespace AltMstestGui
             return run;
         }
 
+        // ReSharper disable PossibleNullReferenceException
         private Comparison<MethodInfo> SortSubClassesLast()
         {
             return (a, b) =>
@@ -83,6 +80,7 @@ namespace AltMstestGui
                    typeSortedIndex[a.DeclaringType.Name].CompareTo(
                        typeSortedIndex[b.DeclaringType.Name]);
         }
+        // ReSharper restore PossibleNullReferenceException
 
         // Need to initialize base classes first.
         // Need to cleanup derived classes first.
@@ -112,16 +110,17 @@ namespace AltMstestGui
 
             if (!IsStaticClass)
             {
-                object instance = Activator.CreateInstance(_classType);
-
-                // Initialize the context
-                if (TestContextMethod != null)
-                {
-                    TestContextMethod.SetValue(instance, instance, null);
-                }
 
                 foreach (var testMethod in TestMethods)
                 {
+                    object instance = Activator.CreateInstance(_classType);
+
+                    // Initialize the context
+                    if (TestContextMethod != null)
+                    {
+                        TestContextMethod.SetValue(instance, instance, null);
+                    }
+
                     context.Properties["TestName"] = testMethod.Method.Name;
 
                     // Test Initialize
@@ -133,7 +132,7 @@ namespace AltMstestGui
                     }
 
                     // TODO... Need to capture the stack trace... hmmm this might be an optional setting.
-                    bool success = false;
+                    bool success;
                     try
                     {
                         Action a = CreateMethod(instance, testMethod.Method);
@@ -141,15 +140,6 @@ namespace AltMstestGui
                         RunMethod(a);
 
                         success = true;
-                    }
-                    catch (TargetInvocationException tie)
-                    {
-                        // I don't think this is hit anymore..
-                        if (testMethod.ExpectedException != null &&
-                            testMethod.ExpectedException.ExceptionType == tie.InnerException.GetType())
-                        {
-                            success = true;
-                        }
                     }
                     catch (AssertFailedException)
                     {
@@ -164,12 +154,11 @@ namespace AltMstestGui
                         }
                         else
                         {
-                            // TODO: Figure out what these mean..
                             success = false;
                         }
                     }
 
-                    results.Add(new TestResult()
+                    results.Add(new TestResult
                                     {
                                         TestName = testMethod.Method.Name,
                                         TestPassed = success
