@@ -2,7 +2,7 @@
 using System.Configuration;
 using System.Linq;
 using AltMstest.Core;
-using AltMstestGui.Configuration;
+using AltMstest.Core.Configuration;
 
 namespace altmstest.console
 {
@@ -10,9 +10,11 @@ namespace altmstest.console
     {
         static void Main()
         {
-            var serviceConfigSection = ConfigurationManager.GetSection("FolderSection") as AltMstestSection;
+            var serviceConfigSection = ConfigurationManager.GetSection("AssemblySection") as AltMstestSection;
 
             IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection);
+
+            // This will likely always take the full paths of the assemblies.
 
             var assemblies = synced.SelectMany(a => a.AssembliesWithFullPath);
             TestRunnerLauncher.LoadAssembliesAndRunTests(assemblies);   

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using AltMstest.Core;
-using AltMstestGui.Configuration;
+using AltMstest.Core.Configuration;
 using AltMstestGui.Properties;
 
 namespace AltMstestGui
@@ -19,7 +19,7 @@ namespace AltMstestGui
             Application.SetCompatibleTextRenderingDefault(false);
 
             
-            var serviceConfigSection = ConfigurationManager.GetSection("FolderSection") as AltMstestSection;
+            var serviceConfigSection = ConfigurationManager.GetSection("AssemblySection") as AltMstestSection;
             var menuItem1 = new MenuItem
             {
                 Index = 0,
@@ -27,6 +27,7 @@ namespace AltMstestGui
             };
             menuItem1.Click += (sender, e) =>
                                    {
+                                       // TODO: This should use the selected assembly names...
                                        var t = new Thread(
                                            () =>
                                                {

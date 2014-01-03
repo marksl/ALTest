@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AltMstestGui.Configuration;
+using AltMstest.Core.Configuration;
 
 namespace AltMstest.Core
 {
@@ -23,12 +23,12 @@ namespace AltMstest.Core
                 Directory.CreateDirectory(destination);
             }
 
-            foreach (FolderConfigElement folder in serviceConfigSection.Folders)
+            foreach (AssemblyConfigElement assembly in serviceConfigSection.Assemblies)
             {
                 // Copy everything from folder.Folder
-                var sourceDir = new DirectoryInfo(folder.Folder);
+                var sourceDir = new DirectoryInfo(assembly.Folder);
 
-                var destinationName = GetDestinationName(folder.Folder);
+                var destinationName = GetDestinationName(assembly.Folder);
                 string destinationFullPath = Path.Combine(destination, destinationName);
 
                 DirectoryInfo destDir = !Directory.Exists(destinationFullPath)
@@ -39,11 +39,11 @@ namespace AltMstest.Core
 
                 var dest = new SyncedDestination();
 
-                foreach (string ass in folder.AssemblyNames)
-                {
-                    string assemblyFullPath = Path.Combine(destinationFullPath, ass);
-                    dest.AddAssembly(assemblyFullPath);
-                }
+                string ass = assembly.FileName;
+
+                string assemblyFullPath = Path.Combine(destinationFullPath, ass);
+                dest.AddAssembly(ass, assemblyFullPath);
+                
 
                 dests.Add(dest);
             }
@@ -89,21 +89,36 @@ namespace AltMstest.Core
 
         private class SyncedDestination : ISyncedDestination
         {
-            private readonly List<string> _ass;
-
+            private readonly Dictionary<string, string> _ass;
+            
             public SyncedDestination()
             {
-                _ass = new List<string>();
+                _ass = new Dictionary<string, string>();
+            }
+
+            public IList<string> AssemblyNames
+            {
+                get { return _ass.Keys.ToList(); }
             }
 
             public IList<string> AssembliesWithFullPath
             {
-                get { return _ass; }
+                get { return _ass.Values.ToList(); }
             }
 
-            public void AddAssembly(string assemblyFullPath)
+            public IList<string> GetAssembliesWithFullPath(IList<string> assemblyNames)
             {
-                _ass.Add(assemblyFullPath);
+                var assembliesWithFullPaths = new List<string>();
+                foreach (var key in assemblyNames)
+                {
+                    AssembliesWithFullPath.Add(_ass[key]);
+                }
+                return assembliesWithFullPaths;
+            }
+
+            public void AddAssembly(string fileName, string assemblyFullPath)
+            {
+                _ass.Add(fileName, assemblyFullPath);
             }
         }
     }

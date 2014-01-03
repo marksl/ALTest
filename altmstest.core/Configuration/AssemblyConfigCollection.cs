@@ -1,12 +1,12 @@
 ﻿using System.Configuration;
 
-namespace AltMstestGui.Configuration
+namespace AltMstest.Core.Configuration
 {
-    public class FolderConfigCollection : ConfigurationElementCollection
+    public class AssemblyConfigCollection : ConfigurationElementCollection
     {
-        public FolderConfigElement this[int index]
+        public AssemblyConfigElement this[int index]
         {
-            get { return (FolderConfigElement)BaseGet(index); }
+            get { return (AssemblyConfigElement)BaseGet(index); }
             set
             {
                 if (BaseGet(index) != null)
@@ -17,7 +17,7 @@ namespace AltMstestGui.Configuration
             }
         }
 
-        public void Add(FolderConfigElement serviceConfig)
+        public void Add(AssemblyConfigElement serviceConfig)
         {
             BaseAdd(serviceConfig);
         }
@@ -29,15 +29,15 @@ namespace AltMstestGui.Configuration
 
         protected override ConfigurationElement CreateNewElement()
         {
-            return new FolderConfigElement();
+            return new AssemblyConfigElement();
         }
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            return ((FolderConfigElement)element).Folder;
+            return ((AssemblyConfigElement)element).Folder;
         }
 
-        public void Remove(FolderConfigElement serviceConfig)
+        public void Remove(AssemblyConfigElement serviceConfig)
         {
             BaseRemove(serviceConfig.Folder);
         }

@@ -47,8 +47,8 @@
     <Compile Include="AppConfig.cs" />
     <Compile Include="ClassTestRun.cs" />
     <Compile Include="Configuration\AltMstestSection.cs" />
-    <Compile Include="Configuration\FolderConfigCollection.cs" />
-    <Compile Include="Configuration\FolderConfigElement.cs" />
+    <Compile Include="Configuration\AssemblyConfigCollection.cs" />
+    <Compile Include="Configuration\AssemblyConfigElement.cs" />
     <Compile Include="FolderSync.cs" />
     <Compile Include="ISyncedDestination.cs" />
     <Compile Include="MethodTestRun.cs" />

@@ -1,19 +1,19 @@
 ﻿using System.Configuration;
 
-namespace AltMstestGui.Configuration
+namespace AltMstest.Core.Configuration
 {
     public class AltMstestSection : ConfigurationSection
     {
-        [ConfigurationProperty("Folders", IsDefaultCollection = false)]
-        [ConfigurationCollection(typeof(FolderConfigCollection),
+        [ConfigurationProperty("Assemblies", IsDefaultCollection = false)]
+        [ConfigurationCollection(typeof(AssemblyConfigCollection),
             AddItemName = "add",
             ClearItemsName = "clear",
             RemoveItemName = "remove")]
-        public FolderConfigCollection Folders
+        public AssemblyConfigCollection Assemblies
         {
             get
             {
-                return (FolderConfigCollection)base["Folders"];
+                return (AssemblyConfigCollection)base["Assemblies"];
             }
         }
 
