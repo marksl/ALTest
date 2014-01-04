@@ -18,46 +18,8 @@ namespace AltMstestGui
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            new Menu();
             
-            var serviceConfigSection = ConfigurationManager.GetSection("AssemblySection") as AltMstestSection;
-            var menuItem1 = new MenuItem
-            {
-                Index = 0,
-                Text = "Run Tests"
-            };
-            menuItem1.Click += (sender, e) =>
-                                   {
-                                       // TODO: This should use the selected assembly names...
-                                       var t = new Thread(
-                                           () =>
-                                               {
-                                                   IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection);
-
-                                                   var assemblies = synced.SelectMany(a => a.AssembliesWithFullPath);
-                                                   TestRunnerLauncher.LoadAssembliesAndRunTests(assemblies);   
-                                               }
-                                           ) {Name = "My test"};
-
-                                       t.Start();
-                                   };
-            var closeMenuItem = new MenuItem
-            {
-                Index = 0,
-                Text = "Exit"
-            };
-            closeMenuItem.Click += (sender, e) => Application.Exit();
-
-            var contextMenu1 = new ContextMenu();
-            contextMenu1.MenuItems.AddRange(new[] { menuItem1, closeMenuItem });
-
-            new NotifyIcon
-            {
-                Icon = Resources.dot,
-                ContextMenu = contextMenu1,
-                Text = "AltMsTest",
-                Visible = true
-            };
-
             Application.Run();        
         }
     }

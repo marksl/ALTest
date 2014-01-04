@@ -98,14 +98,14 @@ namespace AltMstest.Core
             get { return _classType.IsSealed && _classType.IsAbstract; }
         }
 
-        public List<TestResult> Run(MyTestContext context)
+        public List<TestResult> Run()
         {
             var results = new List<TestResult>(100);
 
             // Class Initialize
             foreach (var classInit in ClassInitialize)
             {
-                classInit.Invoke(null, new object[] {context});
+                classInit.Invoke(null, new object[] {new MyTestContext()});
             }
 
             if (!IsStaticClass)
@@ -113,14 +113,15 @@ namespace AltMstest.Core
 
                 foreach (var testMethod in TestMethods)
                 {
+                    var context = new MyTestContext();
                     object instance = Activator.CreateInstance(_classType);
 
                     // Initialize the context
                     if (TestContextMethod != null)
                     {
-                        TestContextMethod.SetValue(instance, instance, null);
+                        TestContextMethod.SetValue(instance, context, null);
                     }
-
+                    
                     context.Properties["TestName"] = testMethod.Method.Name;
 
                     // Test Initialize
@@ -177,7 +178,7 @@ namespace AltMstest.Core
             // Class Cleanup
             foreach (var classCleanup in ClassCleanup)
             {
-                classCleanup.Invoke(null, new object[] {context});
+                classCleanup.Invoke(null, new object[] {new MyTestContext()});
             }
 
             return results;

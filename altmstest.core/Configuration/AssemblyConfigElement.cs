@@ -13,7 +13,7 @@ namespace AltMstest.Core.Configuration
             }
         }
 
-        internal string FileName
+        public string FileName
         {
             get
             {

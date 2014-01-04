@@ -26,19 +26,17 @@ namespace AltMstest.Core
         {
             var results = new List<TestResult>();
            
-            var context = new MyTestContext();
-
             using (AppConfig.Change(_configFile))
             {
                 // Assembly initialize
                 foreach (var assemblyInit in AssemblyInitialize)
                 {
-                    assemblyInit.Invoke(null, new object[] {context});
+                    assemblyInit.Invoke(null, new object[] {new MyTestContext()});
                 }
 
                 var l = new object();
 
-                foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run(context)))
+                foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run()))
                 {
                     lock (l)
                     {

@@ -12,7 +12,7 @@ namespace altmstest.console
         {
             var serviceConfigSection = ConfigurationManager.GetSection("AssemblySection") as AltMstestSection;
 
-            IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection);
+            IList<ISyncedDestination> synced = FolderSync.Sync(serviceConfigSection.Destination, serviceConfigSection.AssemblyList);
 
             // This will likely always take the full paths of the assemblies.
 

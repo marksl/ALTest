@@ -1,4 +1,6 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 
 namespace AltMstest.Core.Configuration
 {
@@ -17,6 +19,10 @@ namespace AltMstest.Core.Configuration
             }
         }
 
+        public IList<AssemblyConfigElement> AssemblyList
+        {
+            get { return Assemblies.Cast<AssemblyConfigElement>().ToList(); }
+        }
 
         [ConfigurationProperty("Destination", IsRequired = true)]
         public string Destination

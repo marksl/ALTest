@@ -8,11 +8,10 @@ namespace AltMstest.Core
 {
     public static class FolderSync
     {
-        public static IList<ISyncedDestination> Sync(AltMstestSection serviceConfigSection)
+        public static IList<ISyncedDestination> Sync(string destination, IList<AssemblyConfigElement> assemblies)
         {
             var dests = new List<ISyncedDestination>();
 
-            string destination = serviceConfigSection.Destination;
             if (destination == null)
             {
                 throw new InvalidDataException("A destination is required. No destination is specified.");
@@ -23,7 +22,7 @@ namespace AltMstest.Core
                 Directory.CreateDirectory(destination);
             }
 
-            foreach (AssemblyConfigElement assembly in serviceConfigSection.Assemblies)
+            foreach (AssemblyConfigElement assembly in assemblies)
             {
                 // Copy everything from folder.Folder
                 var sourceDir = new DirectoryInfo(assembly.Folder);
