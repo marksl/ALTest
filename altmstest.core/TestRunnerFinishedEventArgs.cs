@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace AltMstest.Core
 {
@@ -6,5 +7,6 @@ namespace AltMstest.Core
     {
         public DateTime StartTime { get; set; }
         public string ElapsedDisplay { get; set; }
+        public IList<TestResult> Failures { get; set; }
     }
 }

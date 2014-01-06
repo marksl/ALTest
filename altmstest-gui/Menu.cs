@@ -107,11 +107,11 @@ namespace AltMstestGui
             DisableAllMenuItems();
 
             _launcher = new TestRunnerLauncher();
-            _launcher.Finished += _launcher_Finished; 
+            _launcher.Finished += Finished; 
             _launcher.Start(startTime, destination, assemblyList);
         }
 
-        void _launcher_Finished(object sender, TestRunnerFinishedEventArgs e)
+        void Finished(object sender, TestRunnerFinishedEventArgs e)
         {
             EnableAllMenuItems();
 
@@ -120,8 +120,38 @@ namespace AltMstestGui
             _lastRun.Text = text; 
             _lastRun.MenuItems.Clear();
 
-            _notifyIcon.Icon = Resources.dot;
-            _notifyIcon.BalloonTipTitle = "Test run finished";
+            if (e.Failures.Count > 0)
+            {
+                // red dot
+                _notifyIcon.Icon = Resources.dotred;
+                _notifyIcon.BalloonTipTitle = "Test run failed";
+
+                int count = 0;
+                foreach (var f in e.Failures)
+                {
+                    if (count++ > 20)
+                    {
+                        var onlyShowFirst20 = new MenuItem { Text = string.Format("There are {0} failures total.", e.Failures) };
+                        onlyShowFirst20.Click += (a, b) => Clipboard.SetText(((MenuItem)a).Text);
+
+                        _lastRun.MenuItems.Add(onlyShowFirst20);
+
+                        break;
+                    }
+
+                    var menuItem = new MenuItem { Text = f.TestName };
+                    menuItem.Click += (a, b) => Clipboard.SetText(((MenuItem) a).Text);
+                    
+                    _lastRun.MenuItems.Add(menuItem);
+                }
+            }
+            else
+            {
+                // green dot
+                _notifyIcon.Icon = Resources.dot;
+                _notifyIcon.BalloonTipTitle = "Test run success";
+            }
+
             _notifyIcon.BalloonTipText = text;
             _notifyIcon.Text = "AltMstest - " + text;
             _notifyIcon.ShowBalloonTip(2);

@@ -138,7 +138,6 @@ namespace AltMstest.Core
                         RunMethod(a);
                     }
 
-                    // TODO... Need to capture the stack trace... hmmm this might be an optional setting.
                     bool success;
                     try
                     {

@@ -21,8 +21,10 @@ namespace AltMstest.Core
             _tokenSource.Cancel();
         }
 
-        public void RunTests(string assembly, bool parallel)
+        public ICollection<TestResult> RunTests(string assembly, bool parallel)
         {
+            var results = new List<TestResult>();
+
             _tokenSource = new CancellationTokenSource();
             var token = _tokenSource.Token;
             var t = Task.Factory.StartNew(() =>
@@ -30,13 +32,13 @@ namespace AltMstest.Core
                                                   TestRun run = GetTestRunFromAssembly(assembly, token);
 
                                                   var result = run.Run(parallel, token);
-                                                  if (result != null)
-                                                  {
-                                                  }
+                                                  results.AddRange(result.Where(c => !c.TestPassed));
                                               },
                                           token);
 
             t.Wait();
+
+            return results;
         }
 
         private static TestRun GetTestRunFromAssembly(string assembly, CancellationToken ct)

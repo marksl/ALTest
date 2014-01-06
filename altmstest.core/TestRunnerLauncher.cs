@@ -29,6 +29,7 @@ namespace AltMstest.Core
 
         private TestRunResult LoadAssembliesAndRunTests(IEnumerable<AssemblyInfo> assemblies, CancellationToken ct)
         {
+            var failures=  new List<TestResult>();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             foreach (var assembly in assemblies)
@@ -43,7 +44,10 @@ namespace AltMstest.Core
                 var scannerType = typeof (TestRunner);
                 _testRunner = (TestRunner) domain.CreateInstanceAndUnwrap(scannerType.Assembly.FullName, scannerType.FullName);
 
-                _testRunner.RunTests(assembly.Assembly, assembly.Parallel);
+                var testResults = _testRunner.RunTests(assembly.Assembly, assembly.Parallel);
+
+                // Deep Copy
+                failures.AddRange(testResults.Select(tr => new TestResult {TestName = tr.TestName, TestPassed = tr.TestPassed}));
 
                 AppDomain.Unload(domain);
             }
@@ -53,7 +57,7 @@ namespace AltMstest.Core
 
             stopWatch.Stop();
 
-            return new TestRunResult(stopWatch.ElapsedMilliseconds);
+            return new TestRunResult(stopWatch.ElapsedMilliseconds, failures);
         }
 
         public Task Start(DateTime startTime, string destination, IList<AssemblyConfigElement> assemblyList)
@@ -71,7 +75,8 @@ namespace AltMstest.Core
                                                        var args = new TestRunnerFinishedEventArgs
                                                                       {
                                                                           StartTime = startTime,
-                                                                          ElapsedDisplay = result.ElapsedDisplay
+                                                                          ElapsedDisplay = result.ElapsedDisplay,
+                                                                          Failures = result.Failures
                                                                       };
                                                        Finished(this, args);
                                                    }

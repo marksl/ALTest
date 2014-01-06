@@ -1,18 +1,20 @@
 using System;
+using System.Collections.Generic;
 
 namespace AltMstest.Core
 {
     public class TestRunResult
     {
-        public TestRunResult(long elapsedMilliseconds)
+        public TestRunResult(long elapsedMilliseconds, List<TestResult> failures)
         {
             ElapsedSeconds = (int) (elapsedMilliseconds/1000);
+            Failures = failures;
         }
 
         public int ElapsedSeconds { get; private set; }
+        public IList<TestResult> Failures { get; private set; }
 
         // convert seconds to days:hours:mins:secs
-
         public string ElapsedDisplay
         {
             get
