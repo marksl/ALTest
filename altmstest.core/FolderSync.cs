@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using AltMstest.Core.Configuration;
 
 namespace AltMstest.Core
 {
     public static class FolderSync
     {
-        public static IList<ISyncedDestination> Sync(string destination, IList<AssemblyConfigElement> assemblies)
+        public static IList<ISyncedDestination> Sync(string destination, IList<AssemblyConfigElement> assemblies, CancellationToken ct)
         {
             var dests = new List<ISyncedDestination>();
 
@@ -24,6 +25,9 @@ namespace AltMstest.Core
 
             foreach (AssemblyConfigElement assembly in assemblies)
             {
+                if (ct.IsCancellationRequested)
+                    return new List<ISyncedDestination>();
+
                 // Copy everything from folder.Folder
                 var sourceDir = new DirectoryInfo(assembly.Folder);
 
@@ -34,15 +38,14 @@ namespace AltMstest.Core
                                             ? Directory.CreateDirectory(destinationFullPath)
                                             : new DirectoryInfo(destinationFullPath);
 
-                SyncDirectory(sourceDir, destDir);
+                SyncDirectory(sourceDir, destDir, ct);
 
                 var dest = new SyncedDestination();
 
                 string ass = assembly.FileName;
 
                 string assemblyFullPath = Path.Combine(destinationFullPath, ass);
-                dest.AddAssembly(ass, assemblyFullPath);
-                
+                dest.AddAssembly(ass, assemblyFullPath, assembly.RunParallel);
 
                 dests.Add(dest);
             }
@@ -50,23 +53,29 @@ namespace AltMstest.Core
             return dests;
         }
 
-        private static void SyncDirectory(DirectoryInfo sourceDir, DirectoryInfo destDir)
+        private static void SyncDirectory(DirectoryInfo sourceDir, DirectoryInfo destDir, CancellationToken ct)
         {
             // Sync sub folders recursively
             foreach (DirectoryInfo sourceSubFolder in sourceDir.GetDirectories())
             {
+                if (ct.IsCancellationRequested)
+                    return;
+
                 var destSubFolderName = Path.Combine(destDir.FullName, sourceSubFolder.Name);
 
                 var destSubFolder = !Directory.Exists(destSubFolderName)
                                         ? Directory.CreateDirectory(destSubFolderName)
                                         : new DirectoryInfo(destSubFolderName);
 
-                SyncDirectory(sourceSubFolder, destSubFolder);
+                SyncDirectory(sourceSubFolder, destSubFolder, ct);
             }
 
             var destFiles = destDir.GetFiles().ToDictionary(x => x.Name);
             foreach (FileInfo sourceFile in sourceDir.GetFiles())
             {
+                if (ct.IsCancellationRequested)
+                    return;
+
                 FileInfo existingDestFile;
                 if (destFiles.TryGetValue(sourceFile.Name, out existingDestFile))
                 {
@@ -88,36 +97,21 @@ namespace AltMstest.Core
 
         private class SyncedDestination : ISyncedDestination
         {
-            private readonly Dictionary<string, string> _ass;
+            private readonly Dictionary<string, AssemblyInfo> _ass;
             
             public SyncedDestination()
             {
-                _ass = new Dictionary<string, string>();
+                _ass = new Dictionary<string, AssemblyInfo>();
             }
 
-            public IList<string> AssemblyNames
-            {
-                get { return _ass.Keys.ToList(); }
-            }
-
-            public IList<string> AssembliesWithFullPath
+            public IList<AssemblyInfo> AssembliesWithFullPath
             {
                 get { return _ass.Values.ToList(); }
             }
 
-            public IList<string> GetAssembliesWithFullPath(IList<string> assemblyNames)
+            public void AddAssembly(string fileName, string assemblyFullPath, bool parallel)
             {
-                var assembliesWithFullPaths = new List<string>();
-                foreach (var key in assemblyNames)
-                {
-                    AssembliesWithFullPath.Add(_ass[key]);
-                }
-                return assembliesWithFullPaths;
-            }
-
-            public void AddAssembly(string fileName, string assemblyFullPath)
-            {
-                _ass.Add(fileName, assemblyFullPath);
+                _ass.Add(fileName, new AssemblyInfo(assemblyFullPath, parallel));
             }
         }
     }

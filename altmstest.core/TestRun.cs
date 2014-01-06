@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace AltMstest.Core
 {
@@ -22,7 +23,7 @@ namespace AltMstest.Core
             return run;
         }
 
-        public List<TestResult> Run()
+        public List<TestResult> Run(bool parallel, CancellationToken ct)
         {
             var results = new List<TestResult>();
            
@@ -34,11 +35,20 @@ namespace AltMstest.Core
                     assemblyInit.Invoke(null, new object[] {new MyTestContext()});
                 }
 
-                var l = new object();
-
-                foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run()))
+                if (parallel)
                 {
-                    lock (l)
+                    var l = new object();
+                    foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run(ct)))
+                    {
+                        lock (l)
+                        {
+                            results.AddRange(classResults);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (List<TestResult> classResults in Classes.Select(c => c.Run(ct)))
                     {
                         results.AddRange(classResults);
                     }

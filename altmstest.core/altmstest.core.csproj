@@ -57,7 +57,9 @@
     <Compile Include="TestResult.cs" />
     <Compile Include="TestRun.cs" />
     <Compile Include="TestRunner.cs" />
+    <Compile Include="TestRunnerFinishedEventArgs.cs" />
     <Compile Include="TestRunnerLauncher.cs" />
+    <Compile Include="TestRunResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

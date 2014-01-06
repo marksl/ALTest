@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AltMstest.Core
@@ -98,9 +99,12 @@ namespace AltMstest.Core
             get { return _classType.IsSealed && _classType.IsAbstract; }
         }
 
-        public List<TestResult> Run()
+        public List<TestResult> Run(CancellationToken ct)
         {
             var results = new List<TestResult>(100);
+
+            if (ct.IsCancellationRequested)
+                return results;
 
             // Class Initialize
             foreach (var classInit in ClassInitialize)
@@ -110,9 +114,11 @@ namespace AltMstest.Core
 
             if (!IsStaticClass)
             {
-
                 foreach (var testMethod in TestMethods)
                 {
+                    if (ct.IsCancellationRequested)
+                        return new List<TestResult>();
+
                     var context = new MyTestContext();
                     object instance = Activator.CreateInstance(_classType);
 

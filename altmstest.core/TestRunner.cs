@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AltMstest.Core
@@ -13,21 +14,32 @@ namespace AltMstest.Core
     {
         private static readonly Dictionary<string, Assembly> asses = new Dictionary<string, Assembly>();
         private static readonly object assesLock = new object();
+        private CancellationTokenSource _tokenSource;
 
-        public void RunTests(string assembly)
+        public void Cancel()
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-            TestRun run = GetTestRunFromAssembly(assembly);
-
-            var result = run.Run();
-            stopWatch.Stop();
-            if (result != null)
-            {
-            }
+            _tokenSource.Cancel();
         }
 
-        private static TestRun GetTestRunFromAssembly(string assembly)
+        public void RunTests(string assembly, bool parallel)
+        {
+            _tokenSource = new CancellationTokenSource();
+            var token = _tokenSource.Token;
+            var t = Task.Factory.StartNew(() =>
+                                              {
+                                                  TestRun run = GetTestRunFromAssembly(assembly, token);
+
+                                                  var result = run.Run(parallel, token);
+                                                  if (result != null)
+                                                  {
+                                                  }
+                                              },
+                                          token);
+
+            t.Wait();
+        }
+
+        private static TestRun GetTestRunFromAssembly(string assembly, CancellationToken ct)
         {
             var run = new TestRun();
 
@@ -50,6 +62,9 @@ namespace AltMstest.Core
 
             foreach (var type in types)
             {
+                if (ct.IsCancellationRequested)
+                    return new TestRun();
+
                 if (type != null)
                 {
                     if (type.GetCustomAttributes(typeof (TestClassAttribute), false).Length > 0)
@@ -65,6 +80,9 @@ namespace AltMstest.Core
                         var methods = type.GetMethods();
                         foreach (var method in methods)
                         {
+                            if (ct.IsCancellationRequested)
+                                return new TestRun();
+
                             object[] methodAttributes = method.GetCustomAttributes(false);
 
                             if (methodAttributes.Any(c => c as TestMethodAttribute != null))
@@ -117,16 +135,13 @@ namespace AltMstest.Core
         private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
         {
             int firstComma = args.Name.IndexOf(',');
-            string dll;
-            if (firstComma == -1)
-            {
-                dll = args.Name + ".dll";
-            }
-            else
-            {
-                dll = args.Name.Substring(0, firstComma) + ".dll";
-            }
-
+            string dll = firstComma == -1
+                             ? args.Name + ".dll"
+                             : args.Name.Substring(0, firstComma) + ".dll";
+            string exe = firstComma == -1
+                             ? args.Name + ".exe"
+                             : args.Name.Substring(0, firstComma) + ".exe";
+            
             Assembly ass;
 
             lock (assesLock)
@@ -137,15 +152,25 @@ namespace AltMstest.Core
                     {
                         var fileInfo = new FileInfo(args.RequestingAssembly.Location);
                         var fullPath = Path.Combine(fileInfo.DirectoryName, dll);
-                        ass = Assembly.LoadFile(fullPath);
+                        if (File.Exists(fullPath))
+                        {
+                            ass = Assembly.LoadFile(fullPath);
+                        }
+                        else
+                        {
+                            fullPath = Path.Combine(fileInfo.DirectoryName, exe);
+                            if (File.Exists(fullPath))
+                            {
+                                ass = Assembly.LoadFile(fullPath);
+                            }
+                        }
                     }
 
-                    // TODO: This should probably use the Assembly hash as part of the key
+                    // TODO: This should use the Assembly hash as part of the key
                     asses.Add(dll, ass);
                 }
             }
 
             return ass;
-        }
-    }
+        }    }
 }

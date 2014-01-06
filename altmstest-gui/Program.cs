@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
-using AltMstest.Core;
-using AltMstest.Core.Configuration;
-using AltMstestGui.Properties;
 
 namespace AltMstestGui
 {

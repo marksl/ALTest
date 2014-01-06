@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using AltMstest.Core;
 using AltMstest.Core.Configuration;
@@ -9,91 +9,143 @@ using AltMstestGui.Properties;
 
 namespace AltMstestGui
 {
-    // Needs to be updated from the test run....
-
-    // When test run starts...
-
-    // When test runs ends..
-
     public class Menu : ContextMenu
     {
+        private readonly MenuItem _cancel;
+        private readonly MenuItem _lastRun;
+        private readonly NotifyIcon _notifyIcon;
         private readonly AltMstestSection serviceConfigSection;
 
         public Menu()
         {
             serviceConfigSection = ConfigurationManager.GetSection("AssemblySection") as AltMstestSection;
 
-            foreach (AssemblyConfigElement assemblyConfig in serviceConfigSection.Assemblies)
+            // Run a tests from a specific assembly
             {
-                var menuItem = new MenuItem
-                                   {
-                                       Text = string.Format("Run {0} tests", assemblyConfig.FileName)
-                                   };
-                AssemblyConfigElement config = assemblyConfig;
-                menuItem.Click += (a, b) => RunTests(serviceConfigSection.Destination,
-                                                     new List<AssemblyConfigElement> { config });
-                MenuItems.Add(menuItem);
+                var parentRun = new MenuItem {Text = "Run"};
+
+                foreach (AssemblyConfigElement assemblyConfig in serviceConfigSection.AssemblyList)
+                {
+                    var runAssemblyTests = new MenuItem {Text = string.Format("Run {0} tests", assemblyConfig.FileName)};
+
+                    AssemblyConfigElement config = assemblyConfig;
+                    runAssemblyTests.Click += (a, b) => RunTests(serviceConfigSection.Destination,
+                                                                 new List<AssemblyConfigElement> {config});
+                    parentRun.MenuItems.Add(runAssemblyTests);
+                }
+                MenuItems.Add(parentRun);
             }
 
-            var runAllTestsMenuItem = new MenuItem
-                                          {
-                                              Text = "Run all tests"
-                                          };
-            runAllTestsMenuItem.Click += (a, b) => RunTests(serviceConfigSection.Destination,
-                                                            serviceConfigSection.AssemblyList);
+            // Run a category of tests
+            {
+                var categories = serviceConfigSection.AssemblyList.Select(c => c.Category).Distinct().ToList();
+                foreach (var cat in categories)
+                {
+                    var runCategoryTests = new MenuItem {Text = string.Format("Run {0}", cat)};
 
-            var dash = new MenuItem
-                           {
-                               Text = "-"
-                           };
+                    List<AssemblyConfigElement> categoryAssemblies = serviceConfigSection.AssemblyList.Where(c => c.Category == cat).ToList();
+                    runCategoryTests.Click += (a, b) => RunTests(serviceConfigSection.Destination,
+                                                                 categoryAssemblies);
+                    MenuItems.Add(runCategoryTests);
+                }
+            }
 
-            var closeMenuItem = new MenuItem
-                                    {
-                                        Text = "Exit"
-                                    };
-            closeMenuItem.Click += (sender, e) => Application.Exit();
+            // Run all or cancel tests
+            {
+                var runAllTestsMenuItem = new MenuItem {Text = "Run all tests"};
+                runAllTestsMenuItem.Click += (a, b) => RunTests(serviceConfigSection.Destination,
+                                                                serviceConfigSection.AssemblyList);
 
-            MenuItems.AddRange(new[] {runAllTestsMenuItem, dash, closeMenuItem});
+                var dash0 = new MenuItem {Text = "-"};
+                var dash1 = new MenuItem {Text = "-"};
+                var closeMenuItem = new MenuItem {Text = "Exit"};
+                closeMenuItem.Click += (sender, e) => Application.Exit();
+
+                _lastRun = new MenuItem {Visible = false};
+                _cancel = new MenuItem { Text = "Cancel" };
+                _cancel.Click += (sender, e) => Cancel();
+                _lastRun.MenuItems.Add(_cancel);
+
+                MenuItems.AddRange(new[] {dash0, runAllTestsMenuItem, _lastRun, dash1, closeMenuItem});
+            }
 
             _notifyIcon = new NotifyIcon
-            {
-                Icon = Resources.dot,
-                ContextMenu = this,
-                Text = "AltMsTest",
-                Visible = true
-            };
+                              {
+                                  Icon = Resources.dot,
+                                  ContextMenu = this,
+                                  Text = "AltMsTest",
+                                  Visible = true,
+                              };
         }
 
-        private NotifyIcon _notifyIcon;
-
-        void RunTests(string destination, IList<AssemblyConfigElement> assemblyList)
+        private void Cancel()
         {
-            var t = new Thread(
-                       () =>
-                           {
-                               _notifyIcon.Icon = Resources.dotorange;
+            if (_launcher != null)
+            {
+                _launcher.Cancel();
+                _launcher = null;
+            }
+        }
 
-                               foreach (MenuItem m in MenuItems)
-                               {
-                                   if (m.Text != "Exit")
-                                   {
-                                       m.Enabled = false;
-                                   }
-                               }
-                           IList<ISyncedDestination> synced = FolderSync.Sync(destination,
-                                                                              assemblyList);
+        private TestRunnerLauncher _launcher;
 
-                           var assemblies = synced.SelectMany(a => a.AssembliesWithFullPath);
-                           TestRunnerLauncher.LoadAssembliesAndRunTests(assemblies);
-                           _notifyIcon.Icon = Resources.dot;
-                               foreach (MenuItem m in MenuItems)
-                               {
-                                   m.Enabled = true;
-                               }
-                           }
-                       ) { Name = "My test" };
+        private void RunTests(string destination, IList<AssemblyConfigElement> assemblyList)
+        {
+            var startTime = DateTime.Now;
+            var text = "Current Run - Started " + startTime.ToString("hh:mmtt");
 
-            t.Start();
+            _lastRun.Text = text;
+            _lastRun.Visible = true;
+            _lastRun.MenuItems.Add(_cancel);
+
+            _notifyIcon.BalloonTipTitle = "Test run started";
+            _notifyIcon.BalloonTipText = text;
+            _notifyIcon.ShowBalloonTip(2);
+            _notifyIcon.Text = "AltMstest - " + text;
+            _notifyIcon.Icon = Resources.dotorange;
+
+            DisableAllMenuItems();
+
+            _launcher = new TestRunnerLauncher();
+            _launcher.Finished += _launcher_Finished; 
+            _launcher.Start(startTime, destination, assemblyList);
+        }
+
+        void _launcher_Finished(object sender, TestRunnerFinishedEventArgs e)
+        {
+            EnableAllMenuItems();
+
+            var text = "Last run - " + e.StartTime.ToString("hh:mmtt") + " - " + e.ElapsedDisplay + " elapsed";
+
+            _lastRun.Text = text; 
+            _lastRun.MenuItems.Clear();
+
+            _notifyIcon.Icon = Resources.dot;
+            _notifyIcon.BalloonTipTitle = "Test run finished";
+            _notifyIcon.BalloonTipText = text;
+            _notifyIcon.Text = "AltMstest - " + text;
+            _notifyIcon.ShowBalloonTip(2);
+
+            _launcher = null;
+        }
+
+        private void EnableAllMenuItems()
+        {
+            foreach (MenuItem m in MenuItems)
+            {
+                m.Enabled = true;
+            }
+        }
+
+        private void DisableAllMenuItems()
+        {
+            foreach (MenuItem m in MenuItems)
+            {
+                if (m.Text != "Exit" && m.Text != "Cancel" && m != _lastRun)
+                {
+                    m.Enabled = false;
+                }
+            }
         }
     }
 }

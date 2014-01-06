@@ -1,12 +1,10 @@
 using System.Collections.Generic;
+using AltMstest.Core.Configuration;
 
 namespace AltMstest.Core
 {
     public interface ISyncedDestination
     {
-        IList<string> AssemblyNames { get; }
-        IList<string> AssembliesWithFullPath { get; }
-
-        IList<string> GetAssembliesWithFullPath(IList<string> assemblyNames);
+        IList<AssemblyInfo> AssembliesWithFullPath { get; }
     }
 }
