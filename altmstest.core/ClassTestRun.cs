@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using Fasterflect;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AltMstest.Core
@@ -136,11 +137,14 @@ namespace AltMstest.Core
                         Action a = CreateMethod(instance, testInit);
 
                         RunMethod(a);
+                        //testInit.Call(instance);
                     }
 
                     bool success;
                     try
                     {
+                        //testMethod.Method.Call(instance);
+
                         Action a = CreateMethod(instance, testMethod.Method);
 
                         RunMethod(a);
@@ -173,6 +177,8 @@ namespace AltMstest.Core
                     // Test Cleanup
                     foreach (var testCleanup in TestCleanup)
                     {
+                        //testCleanup.Call(instance);
+
                         Action a = CreateMethod(instance, testCleanup);
 
                         RunMethod(a);
