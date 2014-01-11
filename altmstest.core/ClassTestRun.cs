@@ -157,6 +157,7 @@ namespace AltMstest.Core
                     context.Properties["TestName"] = testMethod.Method.Name;
 
                     bool success = true;
+                    string stackTrace = null;
                     // Test Initialize
                     foreach (var testInit in TestInitialize)
                     {
@@ -166,9 +167,10 @@ namespace AltMstest.Core
                         {
                             RunMethod(a);
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
                             success = false;
+                            stackTrace = e.StackTrace;
                         }
                         
                         //testInit.Call(instance);
@@ -187,9 +189,10 @@ namespace AltMstest.Core
 
                         RunMethod(a);
                     }
-                    catch (AssertFailedException)
+                    catch (AssertFailedException e)
                     {
                         success = false;
+                        stackTrace = e.StackTrace;
                     }
                     catch (Exception ex)
                     {
@@ -200,6 +203,7 @@ namespace AltMstest.Core
                         else
                         {
                             success = false;
+                            stackTrace = ex.StackTrace;
                         }
                     }
 
@@ -214,16 +218,19 @@ namespace AltMstest.Core
                         {
                             RunMethod(a);
                         }
-                        catch
+                        catch (Exception e)
                         {
                             success = false;
+                            stackTrace = e.StackTrace;
                         }
                     }
 
                     results.Add(new TestResult
                     {
+                        ClassName = _classType.Name,
                         TestName = testMethod.Method.Name,
-                        TestPassed = success
+                        TestPassed = success,
+                        StackTrace = stackTrace
                     });
 
                 }

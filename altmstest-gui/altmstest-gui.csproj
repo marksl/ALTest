@@ -51,11 +51,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FailureDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FailureDetails.Designer.cs">
+      <DependentUpon>FailureDetails.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menu.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="FailureDetails.resx">
+      <DependentUpon>FailureDetails.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>

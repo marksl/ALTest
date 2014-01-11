@@ -38,7 +38,7 @@ namespace AltMstest.Core
                 if (parallel)
                 {
                     var l = new object();
-                    foreach (List<TestResult> classResults in Classes.AsParallel().WithDegreeOfParallelism(2).Select(c => c.Run(ct)))
+                    foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run(ct)))
                     {
                         lock (l)
                         {

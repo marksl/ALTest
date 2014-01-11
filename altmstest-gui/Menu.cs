@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using AltMstest.Core;
 using AltMstest.Core.Configuration;
@@ -111,6 +112,11 @@ namespace AltMstestGui
             _launcher.Start(startTime, destination, assemblyList);
         }
 
+        private FailureDetails _details = new FailureDetails
+                                             {
+                                                 Visible = false
+                                             };
+
         void Finished(object sender, TestRunnerFinishedEventArgs e)
         {
             EnableAllMenuItems();
@@ -126,15 +132,19 @@ namespace AltMstestGui
                 _notifyIcon.Icon = Resources.dotred;
                 _notifyIcon.BalloonTipTitle = "Test run failed";
 
+                StringBuilder errorDetails = new StringBuilder();
                 int count = 0;
                 foreach (var f in e.Failures)
                 {
                     if (count++ > 20)
                     {
-                        var onlyShowFirst20 = new MenuItem { Text = string.Format("There are {0} failures total.", e.Failures.Count) };
+                        var moreErrors = string.Format("There are {0} failures total.", e.Failures.Count);
+                        var onlyShowFirst20 = new MenuItem { Text = moreErrors };
                         onlyShowFirst20.Click += (a, b) => Clipboard.SetText(((MenuItem)a).Text);
 
                         _lastRun.MenuItems.Add(onlyShowFirst20);
+
+                        errorDetails.Append(moreErrors).AppendLine();
 
                         break;
                     }
@@ -143,7 +153,23 @@ namespace AltMstestGui
                     menuItem.Click += (a, b) => Clipboard.SetText(((MenuItem) a).Text);
                     
                     _lastRun.MenuItems.Add(menuItem);
+
+                    errorDetails
+                        .Append("Class: ").Append(f.ClassName).AppendLine()
+                        .Append("Test: ").Append(f.TestName).AppendLine()
+                        .Append("Stack Trace:").AppendLine()
+                        .Append(f.StackTrace).AppendLine().Append("============").AppendLine().AppendLine();
+
                 }
+
+                _details.ErrorDetails = errorDetails;
+                var detailsMenu = new MenuItem {Text = "View Details"};
+                detailsMenu.Click += (a, b) =>
+                                         {
+                                             _details.Visible = true;
+                                             _details.Show();
+                                         };
+                _lastRun.MenuItems.Add(detailsMenu);
             }
             else
             {

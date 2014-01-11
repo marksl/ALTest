@@ -47,7 +47,13 @@ namespace AltMstest.Core
                 var testResults = _testRunner.RunTests(assembly.Assembly, assembly.Parallel);
 
                 // Deep Copy
-                failures.AddRange(testResults.Select(tr => new TestResult {TestName = tr.TestName, TestPassed = tr.TestPassed}));
+                failures.AddRange(testResults.Select(tr =>
+                                                     new TestResult(
+                                                         tr.TestName,
+                                                         tr.TestPassed,
+                                                         tr.ClassName,
+                                                         tr.StackTrace
+                                                         )));
 
                 AppDomain.Unload(domain);
             }
