@@ -131,7 +131,7 @@ namespace AltMstestGui
                 {
                     if (count++ > 20)
                     {
-                        var onlyShowFirst20 = new MenuItem { Text = string.Format("There are {0} failures total.", e.Failures) };
+                        var onlyShowFirst20 = new MenuItem { Text = string.Format("There are {0} failures total.", e.Failures.Count) };
                         onlyShowFirst20.Click += (a, b) => Clipboard.SetText(((MenuItem)a).Text);
 
                         _lastRun.MenuItems.Add(onlyShowFirst20);

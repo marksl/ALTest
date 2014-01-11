@@ -107,18 +107,43 @@ namespace AltMstest.Core
             if (ct.IsCancellationRequested)
                 return results;
 
+            bool allFail = false;
             // Class Initialize
             foreach (var classInit in ClassInitialize)
             {
-                classInit.Invoke(null, new object[] {new MyTestContext()});
+                try
+                {
+                    classInit.Invoke(null, new object[] {new MyTestContext()});
+                }
+                catch
+                {
+                    allFail = true;
+                }
             }
 
             if (!IsStaticClass)
             {
                 foreach (var testMethod in TestMethods)
                 {
+                    if (allFail)
+                    {
+                        results.Add(new TestResult
+                        {
+                            TestName = testMethod.Method.Name,
+                            TestPassed = false
+                        });
+                        continue;
+                    }
+
                     if (ct.IsCancellationRequested)
                         return new List<TestResult>();
+
+
+                    var ignore = testMethod.Method.GetCustomAttributes(typeof (IgnoreAttribute), false);
+                    if (ignore.Length > 0)
+                    {
+                        continue;
+                    }
 
                     var context = new MyTestContext();
                     object instance = Activator.CreateInstance(_classType);
@@ -131,25 +156,36 @@ namespace AltMstest.Core
                     
                     context.Properties["TestName"] = testMethod.Method.Name;
 
+                    bool success = true;
                     // Test Initialize
                     foreach (var testInit in TestInitialize)
                     {
                         Action a = CreateMethod(instance, testInit);
 
-                        RunMethod(a);
+                        try
+                        {
+                            RunMethod(a);
+                        }
+                        catch (Exception)
+                        {
+                            success = false;
+                        }
+                        
                         //testInit.Call(instance);
                     }
 
-                    bool success;
+                    if (!success)
+                        continue;
+
+                    
                     try
                     {
                         //testMethod.Method.Call(instance);
 
+
                         Action a = CreateMethod(instance, testMethod.Method);
 
                         RunMethod(a);
-
-                        success = true;
                     }
                     catch (AssertFailedException)
                     {
@@ -160,19 +196,12 @@ namespace AltMstest.Core
                         if (testMethod.ExpectedException != null &&
                             testMethod.ExpectedException.ExceptionType == ex.GetType())
                         {
-                            success = true;
                         }
                         else
                         {
                             success = false;
                         }
                     }
-
-                    results.Add(new TestResult
-                                    {
-                                        TestName = testMethod.Method.Name,
-                                        TestPassed = success
-                                    });
 
                     // Test Cleanup
                     foreach (var testCleanup in TestCleanup)
@@ -181,15 +210,33 @@ namespace AltMstest.Core
 
                         Action a = CreateMethod(instance, testCleanup);
 
-                        RunMethod(a);
+                        try
+                        {
+                            RunMethod(a);
+                        }
+                        catch
+                        {
+                            success = false;
+                        }
                     }
+
+                    results.Add(new TestResult
+                    {
+                        TestName = testMethod.Method.Name,
+                        TestPassed = success
+                    });
+
                 }
             }
 
             // Class Cleanup
             foreach (var classCleanup in ClassCleanup)
             {
-                classCleanup.Invoke(null, new object[] {new MyTestContext()});
+                try
+                {
+                    classCleanup.Invoke(null, null);
+                }
+                catch { }
             }
 
             return results;
