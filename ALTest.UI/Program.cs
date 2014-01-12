@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-using Menu = ALTest.UI.Menu;
 
 namespace ALTest.UI
 {

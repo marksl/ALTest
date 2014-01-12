@@ -115,6 +115,8 @@ namespace ALTest.UI
             _launcher.Start(startTime, destination, assemblyList, serviceConfigSection.TestAssembly);
         }
 
+        private bool firstTime = true;
+
         void Finished(object sender, TestRunnerFinishedEventArgs e)
         {
             EnableAllMenuItems();
@@ -148,7 +150,19 @@ namespace ALTest.UI
                     }
 
                     var menuItem = new MenuItem { Text = f.TestName };
-                    menuItem.Click += (a, b) => Clipboard.SetText(((MenuItem)a).Text);
+                    menuItem.Click += (a, b) =>
+                                          {
+                                              var clipboardText = ((MenuItem) a).Text;
+                                              Clipboard.SetText(clipboardText);
+
+                                              if (firstTime)
+                                              {
+                                                  firstTime = false;
+                                                  _notifyIcon.BalloonTipTitle = "Clipboard";
+                                                  _notifyIcon.BalloonTipText = string.Format("[{0}] was copied to the clip board.", clipboardText);
+                                                  _notifyIcon.ShowBalloonTip(2);
+                                              }
+                                          };
 
                     _lastRun.MenuItems.Add(menuItem);
 
