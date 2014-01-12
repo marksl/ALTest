@@ -45,7 +45,7 @@ namespace AltMstest.Core
                 string ass = assembly.FileName;
 
                 string assemblyFullPath = Path.Combine(destinationFullPath, ass);
-                dest.AddAssembly(ass, assemblyFullPath, assembly.RunParallel);
+                dest.AddAssembly(ass, assemblyFullPath, assembly.RunParallel, assembly.DegreeOfParallelism);
 
                 dests.Add(dest);
             }
@@ -109,9 +109,9 @@ namespace AltMstest.Core
                 get { return _ass.Values.ToList(); }
             }
 
-            public void AddAssembly(string fileName, string assemblyFullPath, bool parallel)
+            public void AddAssembly(string fileName, string assemblyFullPath, bool parallel, int? degreeOfParallelism)
             {
-                _ass.Add(fileName, new AssemblyInfo(assemblyFullPath, parallel));
+                _ass.Add(fileName, new AssemblyInfo(assemblyFullPath, parallel, degreeOfParallelism));
             }
         }
     }

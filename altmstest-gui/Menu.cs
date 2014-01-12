@@ -97,6 +97,7 @@ namespace AltMstestGui
 
             _lastRun.Text = text;
             _lastRun.Visible = true;
+            _lastRun.MenuItems.Clear();
             _lastRun.MenuItems.Add(_cancel);
 
             _notifyIcon.BalloonTipTitle = "Test run started";
@@ -111,11 +112,6 @@ namespace AltMstestGui
             _launcher.Finished += Finished; 
             _launcher.Start(startTime, destination, assemblyList);
         }
-
-        private FailureDetails _details = new FailureDetails
-                                             {
-                                                 Visible = false
-                                             };
 
         void Finished(object sender, TestRunnerFinishedEventArgs e)
         {
@@ -150,25 +146,20 @@ namespace AltMstestGui
                     }
 
                     var menuItem = new MenuItem { Text = f.TestName };
-                    menuItem.Click += (a, b) => Clipboard.SetText(((MenuItem) a).Text);
-                    
+                    menuItem.Click += (a, b) => Clipboard.SetText(((MenuItem)a).Text);
+
                     _lastRun.MenuItems.Add(menuItem);
 
                     errorDetails
                         .Append("Class: ").Append(f.ClassName).AppendLine()
                         .Append("Test: ").Append(f.TestName).AppendLine()
-                        .Append("Stack Trace:").AppendLine()
-                        .Append(f.StackTrace).AppendLine().Append("============").AppendLine().AppendLine();
+                        .Append("Exception:").AppendLine()
+                        .Append(f.ExceptionString).AppendLine().Append("============").AppendLine().AppendLine();
 
                 }
 
-                _details.ErrorDetails = errorDetails;
-                var detailsMenu = new MenuItem {Text = "View Details"};
-                detailsMenu.Click += (a, b) =>
-                                         {
-                                             _details.Visible = true;
-                                             _details.Show();
-                                         };
+                var detailsMenu = new MenuItem { Text = "View Details" };
+                detailsMenu.Click += (a, b) => new FailureDetails { ErrorDetails = errorDetails }.Show();
                 _lastRun.MenuItems.Add(detailsMenu);
             }
             else

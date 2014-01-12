@@ -108,6 +108,7 @@ namespace AltMstest.Core
                 return results;
 
             bool allFail = false;
+            string allException = null;
             // Class Initialize
             foreach (var classInit in ClassInitialize)
             {
@@ -115,9 +116,10 @@ namespace AltMstest.Core
                 {
                     classInit.Invoke(null, new object[] {new MyTestContext()});
                 }
-                catch
+                catch(Exception e)
                 {
                     allFail = true;
+                    allException= e.ToString();
                 }
             }
 
@@ -127,11 +129,7 @@ namespace AltMstest.Core
                 {
                     if (allFail)
                     {
-                        results.Add(new TestResult
-                        {
-                            TestName = testMethod.Method.Name,
-                            TestPassed = false
-                        });
+                        results.Add(new TestResult(testMethod.Method.Name, false, _classType.Name, allException));
                         continue;
                     }
 
@@ -157,7 +155,7 @@ namespace AltMstest.Core
                     context.Properties["TestName"] = testMethod.Method.Name;
 
                     bool success = true;
-                    string stackTrace = null;
+                    string exceptionString = null;
                     // Test Initialize
                     foreach (var testInit in TestInitialize)
                     {
@@ -170,7 +168,7 @@ namespace AltMstest.Core
                         catch (Exception e)
                         {
                             success = false;
-                            stackTrace = e.StackTrace;
+                            exceptionString = e.ToString();
                         }
                         
                         //testInit.Call(instance);
@@ -192,7 +190,7 @@ namespace AltMstest.Core
                     catch (AssertFailedException e)
                     {
                         success = false;
-                        stackTrace = e.StackTrace;
+                        exceptionString = e.ToString();
                     }
                     catch (Exception ex)
                     {
@@ -203,7 +201,7 @@ namespace AltMstest.Core
                         else
                         {
                             success = false;
-                            stackTrace = ex.StackTrace;
+                            exceptionString = ex.ToString();
                         }
                     }
 
@@ -221,17 +219,16 @@ namespace AltMstest.Core
                         catch (Exception e)
                         {
                             success = false;
-                            stackTrace = e.StackTrace;
+                            exceptionString = e.ToString();
                         }
                     }
 
-                    results.Add(new TestResult
-                    {
-                        ClassName = _classType.Name,
-                        TestName = testMethod.Method.Name,
-                        TestPassed = success,
-                        StackTrace = stackTrace
-                    });
+                    results.Add(new TestResult(
+                        testMethod.Method.Name,
+                        success,
+                        _classType.Name,
+                        exceptionString
+                    ));
 
                 }
             }

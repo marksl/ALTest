@@ -23,7 +23,7 @@ namespace AltMstest.Core
             return run;
         }
 
-        public List<TestResult> Run(bool parallel, CancellationToken ct)
+        public List<TestResult> Run(bool parallel, int? degreeOfParallelism, CancellationToken ct)
         {
             var results = new List<TestResult>();
            
@@ -38,7 +38,14 @@ namespace AltMstest.Core
                 if (parallel)
                 {
                     var l = new object();
-                    foreach (List<TestResult> classResults in Classes.AsParallel().Select(c => c.Run(ct)))
+                    
+                    ParallelQuery<ClassTestRun> classTestRuns = Classes.AsParallel();
+                    if (degreeOfParallelism.HasValue)
+                    {
+                        classTestRuns = classTestRuns.WithDegreeOfParallelism(degreeOfParallelism.Value);
+                    }
+
+                    foreach (List<TestResult> classResults in classTestRuns.Select(c => c.Run(ct)))
                     {
                         lock (l)
                         {
@@ -65,6 +72,7 @@ namespace AltMstest.Core
         }
 
         // Apparently only one Assembly Initialize is supported... TODO: Test if you can have more than 1.
+        // MsTest only supports 1 assembly initalize... other test runners might support more, so i'll support more.
         public List<MethodInfo> AssemblyInitialize { get; set; }
         public List<MethodInfo> AssemblyCleanup { get; set; }
 

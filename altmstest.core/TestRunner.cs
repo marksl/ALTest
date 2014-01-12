@@ -21,7 +21,7 @@ namespace AltMstest.Core
             _tokenSource.Cancel();
         }
 
-        public ICollection<TestResult> RunTests(string assembly, bool parallel)
+        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism)
         {
             var results = new List<TestResult>();
 
@@ -31,7 +31,7 @@ namespace AltMstest.Core
                                               {
                                                   TestRun run = GetTestRunFromAssembly(assembly, token);
 
-                                                  var result = run.Run(parallel, token);
+                                                  var result = run.Run(parallel, degreeOfParallelism, token);
                                                   results.AddRange(result.Where(c => !c.TestPassed));
                                               },
                                           token);
@@ -79,7 +79,7 @@ namespace AltMstest.Core
                             classTestRun.TestContextMethod = prop;
                         }
 
-                        var methods = type.GetMethods();
+                        var methods = type.GetMethods().OrderBy(m => m.Name);
                         foreach (var method in methods)
                         {
                             if (ct.IsCancellationRequested)

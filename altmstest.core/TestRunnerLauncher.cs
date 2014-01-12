@@ -44,7 +44,7 @@ namespace AltMstest.Core
                 var scannerType = typeof (TestRunner);
                 _testRunner = (TestRunner) domain.CreateInstanceAndUnwrap(scannerType.Assembly.FullName, scannerType.FullName);
 
-                var testResults = _testRunner.RunTests(assembly.Assembly, assembly.Parallel);
+                var testResults = _testRunner.RunTests(assembly.Assembly, assembly.Parallel, assembly.DegreeOfParallelism);
 
                 // Deep Copy
                 failures.AddRange(testResults.Select(tr =>
@@ -52,7 +52,7 @@ namespace AltMstest.Core
                                                          tr.TestName,
                                                          tr.TestPassed,
                                                          tr.ClassName,
-                                                         tr.StackTrace
+                                                         tr.ExceptionString
                                                          )));
 
                 AppDomain.Unload(domain);

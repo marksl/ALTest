@@ -7,10 +7,11 @@ namespace AltMstest.Core.Configuration
         private readonly string _assembly;
         private readonly bool _parallel;
 
-        public AssemblyInfo(string assembly, bool parallel)
+        public AssemblyInfo(string assembly, bool parallel, int? degreeOfParallelism)
         {
             _assembly = assembly;
             _parallel = parallel;
+            DegreeOfParallelism = degreeOfParallelism;
         }
 
         public string Assembly
@@ -22,7 +23,10 @@ namespace AltMstest.Core.Configuration
         {
             get { return _parallel; }
         }
+
+        public int? DegreeOfParallelism { get; private set; }
     }
+
     public class AssemblyConfigElement : ConfigurationElement
     {
         public string Folder
@@ -45,7 +49,7 @@ namespace AltMstest.Core.Configuration
 
         public AssemblyInfo Info
         {
-            get { return new AssemblyInfo(Assembly, RunParallel); }
+            get { return new AssemblyInfo(Assembly, RunParallel, DegreeOfParallelism); }
         }
 
         [ConfigurationProperty("Assembly", IsRequired = true, IsKey = false)]
@@ -68,6 +72,14 @@ namespace AltMstest.Core.Configuration
             get { return (bool)this["RunParallel"]; }
             set { this["RunParallel"] = value; }
         }
+
+        [ConfigurationProperty("DegreeOfParallelism", IsRequired = false, IsKey = false, DefaultValue = null)]
+        public int? DegreeOfParallelism
+        {
+            get { return (int?)this["DegreeOfParallelism"]; }
+            set { this["DegreeOfParallelism"] = value; }
+        }
+
 
     }
 }
