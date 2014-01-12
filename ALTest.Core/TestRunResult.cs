@@ -5,14 +5,16 @@ namespace ALTest.Core
 {
     public class TestRunResult
     {
-        public TestRunResult(long elapsedMilliseconds, List<TestResult> failures)
+        public TestRunResult(long elapsedMilliseconds, List<TestResult> failures, int testsRan)
         {
             ElapsedSeconds = (int) (elapsedMilliseconds/1000);
             Failures = failures;
+            TestsRan = testsRan;
         }
 
         public int ElapsedSeconds { get; private set; }
         public IList<TestResult> Failures { get; private set; }
+        public int TestsRan { get; private set; }
 
         public string ElapsedDisplay
         {

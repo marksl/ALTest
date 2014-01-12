@@ -27,11 +27,14 @@ namespace ALTest.Core
             }
         }
 
-        private TestRunResult LoadAssembliesAndRunTests(IEnumerable<AssemblyInfo> assemblies, CancellationToken ct, string testAssembly)
+        private TestRunResult LoadAssembliesAndRunTests(IEnumerable<AssemblyInfo> assemblies, CancellationToken ct, RuntimeConfiguration configuration)
         {
             var failures=  new List<TestResult>();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
+
+            int numberOfTests = 0;
+
             foreach (var assembly in assemblies)
             {
                 if (ct.IsCancellationRequested)
@@ -43,8 +46,10 @@ namespace ALTest.Core
 
                 var scannerType = typeof (TestAssembly);
                 _testAssembly = (TestAssembly) domain.CreateInstanceAndUnwrap(scannerType.Assembly.FullName, scannerType.FullName);
+                int testsInAssembly;
+                var testResults = _testAssembly.RunTests(assembly.Assembly, assembly.Parallel, assembly.DegreeOfParallelism, configuration.TestAssembly, out testsInAssembly);
 
-                var testResults = _testAssembly.RunTests(assembly.Assembly, assembly.Parallel, assembly.DegreeOfParallelism, testAssembly);
+                numberOfTests += testsInAssembly;
 
                 // Deep Copy
                 failures.AddRange(testResults.Select(tr =>
@@ -63,18 +68,18 @@ namespace ALTest.Core
 
             stopWatch.Stop();
 
-            return new TestRunResult(stopWatch.ElapsedMilliseconds, failures);
+            return new TestRunResult(stopWatch.ElapsedMilliseconds, failures, numberOfTests);
         }
 
-        public Task Start(DateTime startTime, string destination, IList<AssemblyConfigElement> assemblyList, string testAssembly)
+        public Task Start(DateTime startTime, RuntimeConfiguration configuration)
         {
             _tokenSource = new CancellationTokenSource();
             var token = _tokenSource.Token;
             Task t = Task.Factory.StartNew(() =>
                                                {
-                                                   IList<ISyncedDestination> synced = FolderSync.Sync(destination, assemblyList, token);
+                                                   IList<ISyncedDestination> synced = FolderSync.Sync(configuration.Destination, configuration.AssemblyList, token);
                                                    var infos = synced.SelectMany(x => x.AssembliesWithFullPath);
-                                                   var result = LoadAssembliesAndRunTests(infos, token, testAssembly);
+                                                   var result = LoadAssembliesAndRunTests(infos, token, configuration);
 
                                                    if (Finished != null)
                                                    {
@@ -82,7 +87,8 @@ namespace ALTest.Core
                                                                       {
                                                                           StartTime = startTime,
                                                                           ElapsedDisplay = result.ElapsedDisplay,
-                                                                          Failures = result.Failures
+                                                                          Failures = result.Failures,
+                                                                          TestsRan = result.TestsRan
                                                                       };
                                                        Finished(this, args);
                                                    }

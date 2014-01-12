@@ -46,6 +46,8 @@
     <Compile Include="ITestLoader.cs" />
     <Compile Include="ITestRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RuntimeConfiguration.cs" />
+    <Compile Include="StdOut.cs" />
     <Compile Include="TestAssembly.cs" />
     <Compile Include="TestClass.cs" />
     <Compile Include="TestFactoryLoader.cs" />

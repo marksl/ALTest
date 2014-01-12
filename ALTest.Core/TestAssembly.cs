@@ -34,10 +34,10 @@ namespace ALTest.Core
             _tokenSource.Cancel();
         }
 
-        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism, string testAssembly)
+        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism, string testAssembly, out int testsRan)
         {
-            var results = new List<TestResult>();
-
+            var failures = new List<TestResult>();
+            int num = 0;
             _tokenSource = new CancellationTokenSource();
             var token = _tokenSource.Token;
             var t = Task.Factory.StartNew(() =>
@@ -49,14 +49,18 @@ namespace ALTest.Core
                                                   if (TryLoadTestsFromAssembly(assembly, token))
                                                   {
                                                       var result = Run(parallel, degreeOfParallelism, token);
-                                                      results.AddRange(result.Where(c => !c.TestPassed));    
+                                                      failures.AddRange(result.Where(c => !c.TestPassed));
+
+                                                      num = result.Count;
                                                   }
                                               },
                                           token);
 
             t.Wait();
 
-            return results;
+            testsRan = num;
+
+            return failures;
         }
 
         private string _configFile;
@@ -67,6 +71,8 @@ namespace ALTest.Core
 
         private bool TryLoadTestsFromAssembly(string assembly, CancellationToken ct)
         {
+            StdOut.WriteLine("Loading {0}...", assembly);
+
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
             Assembly ass = Assembly.LoadFile(assembly);
 
@@ -97,6 +103,14 @@ namespace ALTest.Core
 
         public List<TestResult> Run(bool parallel, int? degreeOfParallelism, CancellationToken ct)
         {
+            StdOut.WriteLine("Starting execution...");
+            StdOut.WriteLine();
+
+            StdOut.Write("{0,-22}","Results");
+            StdOut.WriteLine("{0}", "Top Level Tests");
+            StdOut.Write("{0,-22}", "-------");
+            StdOut.WriteLine("{0}", "---------------");
+
             var results = new List<TestResult>();
 
             using (AppConfig.Change(_configFile))

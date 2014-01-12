@@ -41,9 +41,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ALTest.Core\ALTest.Core.csproj">
       <Project>{6407cc90-2440-4b5c-9ffb-3c1d01946e0a}</Project>
       <Name>ALTest.Core</Name>

@@ -8,5 +8,6 @@ namespace ALTest.Core
         public DateTime StartTime { get; set; }
         public string ElapsedDisplay { get; set; }
         public IList<TestResult> Failures { get; set; }
+        public int TestsRan { get; set; }
     }
 }

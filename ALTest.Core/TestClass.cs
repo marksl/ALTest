@@ -126,7 +126,10 @@ namespace ALTest.Core
                 {
                     if (allFail)
                     {
-                        results.Add(new TestResult(testMethod.Method.Name, false, _classType.Name, allException));
+                        StdOut.Write("{0,-22}", "Failed");
+                        StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
+
+                        results.Add(new TestResult(testMethod.Method.Name, false, _classType.FullName, allException));
                         continue;
                     }
 
@@ -192,10 +195,14 @@ namespace ALTest.Core
                         }
                     }
 
+
+                    StdOut.Write("{0,-22}", success ? "Passed" : "Failed");
+                    StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
+
                     results.Add(new TestResult(
                         testMethod.Method.Name,
                         success,
-                        _classType.Name,
+                        _classType.FullName,
                         exceptionString
                     ));
 
