@@ -29,13 +29,13 @@ namespace ALTest.Core
 
         private TestRunResult LoadAssembliesAndRunTests(IEnumerable<AssemblyInfo> assemblies, CancellationToken ct, RuntimeConfiguration configuration)
         {
-            var failures=  new List<TestResult>();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            int numberOfTests = 0;
+            DateTime start = DateTime.UtcNow;
 
-            foreach (var assembly in assemblies)
+            var assemblyResults = new Dictionary<string, ICollection<TestResult>>();
+            foreach (AssemblyInfo assembly in assemblies)
             {
                 if (ct.IsCancellationRequested)
                     break;
@@ -46,29 +46,35 @@ namespace ALTest.Core
 
                 var scannerType = typeof (TestAssembly);
                 _testAssembly = (TestAssembly) domain.CreateInstanceAndUnwrap(scannerType.Assembly.FullName, scannerType.FullName);
-                int testsInAssembly;
-                var testResults = _testAssembly.RunTests(assembly.Assembly, assembly.Parallel, assembly.DegreeOfParallelism, configuration.TestAssembly, out testsInAssembly);
+                var testResults = _testAssembly.RunTests(assembly.Assembly,
+                                                         assembly.Parallel,
+                                                         assembly.DegreeOfParallelism,
+                                                         configuration.TestAssembly,
+                                                         configuration.ResultsFile);
 
-                numberOfTests += testsInAssembly;
-
-                // Deep Copy
-                failures.AddRange(testResults.Select(tr =>
-                                                     new TestResult(
-                                                         tr.TestName,
-                                                         tr.TestPassed,
-                                                         tr.ClassName,
-                                                         tr.ExceptionString
-                                                         )));
+                assemblyResults.Add(assembly.Assembly, testResults);
 
                 AppDomain.Unload(domain);
             }
 
+            // These are only nice to have for the UI Application. Unecessary for the Console app.
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
             stopWatch.Stop();
+            DateTime end = DateTime.UtcNow;
 
-            return new TestRunResult(stopWatch.ElapsedMilliseconds, failures, numberOfTests);
+            ITestFactory factory = TestFactoryLoader.Load(configuration.TestAssembly);
+            var testRunner = factory.CreateTestRunner();
+
+            List<TestResult> flattendResults = assemblyResults.Values.SelectMany(x => x).ToList();
+            if (configuration.ResultsFile != null)
+            {
+                testRunner.WriteResults(start, end, flattendResults, assemblyResults, configuration.ResultsFile);
+            }
+            
+            var failures = flattendResults.Where(c => !c.TestPassed).ToList();
+            return new TestRunResult(stopWatch.ElapsedMilliseconds, failures, flattendResults.Count);
         }
 
         public Task Start(DateTime startTime, RuntimeConfiguration configuration)

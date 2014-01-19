@@ -3,7 +3,7 @@
 namespace ALTest.Core
 {
     [Serializable]
-    public class TestResult : MarshalByRefObject
+    public class TestResult
     {
         public TestResult(string testName, bool testPassed,
                           string className, string exceptionString)

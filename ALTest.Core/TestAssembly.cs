@@ -34,10 +34,10 @@ namespace ALTest.Core
             _tokenSource.Cancel();
         }
 
-        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism, string testAssembly, out int testsRan)
+        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism,  string testAssembly, string resultsFile)
         {
-            var failures = new List<TestResult>();
-            int num = 0;
+            var testResults = new List<TestResult>();
+            
             _tokenSource = new CancellationTokenSource();
             var token = _tokenSource.Token;
             var t = Task.Factory.StartNew(() =>
@@ -45,22 +45,18 @@ namespace ALTest.Core
                                                   ITestFactory factory = TestFactoryLoader.Load(testAssembly);
                                                   _testLoader = factory.CreateTestLoader();
                                                   _testRunner = factory.CreateTestRunner();
-                                                  
+
                                                   if (TryLoadTestsFromAssembly(assembly, token))
                                                   {
-                                                      var result = Run(parallel, degreeOfParallelism, token);
-                                                      failures.AddRange(result.Where(c => !c.TestPassed));
-
-                                                      num = result.Count;
+                                                      List<TestResult> results = Run(parallel, degreeOfParallelism, token);
+                                                      testResults.AddRange(results);
                                                   }
                                               },
                                           token);
 
             t.Wait();
 
-            testsRan = num;
-
-            return failures;
+            return testResults;
         }
 
         private string _configFile;
@@ -101,7 +97,7 @@ namespace ALTest.Core
             return true;
         }
 
-        public List<TestResult> Run(bool parallel, int? degreeOfParallelism, CancellationToken ct)
+        private List<TestResult> Run(bool parallel, int? degreeOfParallelism, CancellationToken ct)
         {
             StdOut.WriteLine("Starting execution...");
             StdOut.WriteLine();

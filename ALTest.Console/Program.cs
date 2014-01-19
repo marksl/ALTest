@@ -30,6 +30,8 @@ namespace ALTest.Console
             const string testRunnerPrefix = "/testrunner:";
             // - optional. Default is ALTest.MsTest.dll
 
+            const string resultsFilePrefix = "/resultsfile:";
+
             string workingFolder = args.SingleOrDefault(a => a.StartsWith(workingfolderPrefix, StringComparison.InvariantCultureIgnoreCase));
             workingFolder = workingFolder == null
                                 ? Path.Combine(Directory.GetCurrentDirectory(), "ALTestWorkingFolder")
@@ -83,17 +85,19 @@ namespace ALTest.Console
                              ? Path.Combine(Directory.GetCurrentDirectory(), "ALTest.MsTest.dll")
                              : testRunner.Substring(testRunnerPrefix.Length, testRunner.Length - testRunnerPrefix.Length);
 
-
+            string resultsFile = args.SingleOrDefault(a => a.StartsWith(resultsFilePrefix, StringComparison.InvariantCultureIgnoreCase));
+            if (resultsFile != null)
+            {
+                resultsFile = resultsFile.Substring(resultsFilePrefix.Length, resultsFile.Length - resultsFilePrefix.Length);
+            }
 
             // MStest - Initially only need to support 
-            // TODO:  /resultsfile:
             // TODO:  /detail: !!! stacktrace, etc
 
             // ALTest
-            // 
-            // TODO:  /paralleltestcontainer-5:Footests.dll
+            // TODO:  /testcontainer-parallel-strategy-5:Footests.dll
 
-            var configuration = new RuntimeConfiguration(workingFolder, assemblyList, testRunner, false);
+            var configuration = new RuntimeConfiguration(workingFolder, assemblyList, testRunner, false, resultsFile);
             var runner = new TestRunner();
             runner.Finished += Finished;
             var task = runner.Start(DateTime.Now, configuration);

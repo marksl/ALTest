@@ -110,7 +110,7 @@ namespace ALTest.UI
 
             DisableAllMenuItems();
 
-            var configuration = new RuntimeConfiguration(destination, assemblyList, serviceConfigSection.TestAssembly, true);
+            var configuration = new RuntimeConfiguration(destination, assemblyList, serviceConfigSection.TestAssembly, true, null);
 
             _launcher = new TestRunner();
             _launcher.Finished += Finished;
