@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 
@@ -106,9 +107,11 @@ namespace ALTest.Core
             if (ct.IsCancellationRequested)
                 return results;
 
-            bool allFail = false;
-            string allException = null;
-            
+            Exception allException = null;
+
+            DateTime start = DateTime.Now;
+            var watch = Stopwatch.StartNew();
+
             // Class Initialize
             try
             {
@@ -116,31 +119,30 @@ namespace ALTest.Core
             }
             catch (Exception e)
             {
-                allFail = true;
-                allException = e.ToString();
+                allException = e;
+            }
+
+            if (allException != null)
+            {
+                foreach (var testMethod in TestMethods)
+                {
+                    AddResult(results, testMethod, allException, start, watch);
+                }
+
+                return results;
             }
 
             if (!IsStaticClass)
             {
                 foreach (var testMethod in TestMethods)
                 {
-                    if (allFail)
-                    {
-                        StdOut.Write("{0,-22}", "Failed");
-                        StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
-
-                        results.Add(new TestResult(testMethod.Method.Name, false, _classType.FullName, allException));
-                        continue;
-                    }
-
                     if (ct.IsCancellationRequested)
                         return new List<TestResult>();
 
                     object instance = Activator.CreateInstance(_classType);
                     testRunner.TestInitialize(instance, testMethod.Method.Name, this);
                     
-                    bool success = true;
-                    string exceptionString = null;
+                    Exception exception = null;
                     // Test Initialize
                     foreach (var testInit in TestInitialize)
                     {
@@ -152,13 +154,16 @@ namespace ALTest.Core
                         }
                         catch (Exception e)
                         {
-                            success = false;
-                            exceptionString = e.ToString();
+                            exception = e;
+                            break;
                         }
                     }
 
-                    if (!success)
+                    if (exception != null)
+                    {
+                        AddResult(results, testMethod, exception, start, watch);
                         continue;
+                    }
                     
                     try
                     {
@@ -174,8 +179,7 @@ namespace ALTest.Core
                         }
                         else
                         {
-                            success = false;
-                            exceptionString = ex.ToString();
+                            exception = ex;
                         }
                     }
 
@@ -190,22 +194,12 @@ namespace ALTest.Core
                         }
                         catch (Exception e)
                         {
-                            success = false;
-                            exceptionString = e.ToString();
+                            exception = e;
+                            break;
                         }
                     }
 
-
-                    StdOut.Write("{0,-22}", success ? "Passed" : "Failed");
-                    StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
-
-                    results.Add(new TestResult(
-                        testMethod.Method.Name,
-                        success,
-                        _classType.FullName,
-                        exceptionString
-                    ));
-
+                    AddResult(results, testMethod, exception, start, watch);
                 }
             }
 
@@ -220,6 +214,23 @@ namespace ALTest.Core
             }
 
             return results;
+        }
+
+        private void AddResult(ICollection<TestResult> results, TestMethod testMethod, Exception exception, 
+            DateTime start, Stopwatch watch)
+        {
+            StdOut.Write("{0,-22}", exception == null ? "Passed" : "Failed");
+            StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
+
+            var testResult = new TestResult(testMethod.Method.Name, exception == null, _classType.FullName, exception)
+                                 {
+                                     Duration = watch.Elapsed,
+                                     StartTime = start,
+                                     EndTime = DateTime.Now
+                                 };
+            results.Add(testResult);
+
+            watch.Restart();
         }
 
         private static void RunMethod(Action a)

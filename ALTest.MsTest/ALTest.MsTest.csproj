@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MsTestFactory.cs" />
+    <Compile Include="MsTestResultsFile.cs" />
     <Compile Include="MsTestRunner.cs" />
     <Compile Include="MsTestClass.cs" />
     <Compile Include="MsTestContext.cs" />

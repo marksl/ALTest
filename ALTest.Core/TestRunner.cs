@@ -32,7 +32,7 @@ namespace ALTest.Core
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            DateTime start = DateTime.UtcNow;
+            DateTime start = DateTime.Now;
 
             var assemblyResults = new Dictionary<string, ICollection<TestResult>>();
             foreach (AssemblyInfo assembly in assemblies)
@@ -62,7 +62,7 @@ namespace ALTest.Core
             GC.WaitForPendingFinalizers();
 
             stopWatch.Stop();
-            DateTime end = DateTime.UtcNow;
+            DateTime end = DateTime.Now;
 
             ITestFactory factory = TestFactoryLoader.Load(configuration.TestAssembly);
             var testRunner = factory.CreateTestRunner();

@@ -117,7 +117,12 @@ namespace ALTest.Core
                 }
                 catch (Exception e)
                 {
-                    results.Add(new TestResult("Assembly Initialized failed.", false, "Assembly", e.ToString()));
+                    results.Add(new TestResult("Assembly Initialized failed.", false, "Assembly", e)
+                                    {
+                                        StartTime = DateTime.Now,
+                                        EndTime = DateTime.Now,
+                                        Duration = TimeSpan.MinValue
+                                    });
 
                     return results;
                 }
