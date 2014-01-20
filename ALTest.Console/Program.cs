@@ -12,6 +12,8 @@ namespace ALTest.Console
     {
         private static void Main(string[] args)
         {
+            StdOut.Init();
+
             var versionAttribute =
                 (AssemblyFileVersionAttribute) Assembly.GetExecutingAssembly().GetCustomAttributes(typeof (AssemblyFileVersionAttribute), false)[0];
             StdOut.WriteLine("ALTest Version {0}", versionAttribute.Version);
@@ -103,6 +105,8 @@ namespace ALTest.Console
             var task = runner.Start(DateTime.Now, configuration);
 
             task.Wait();
+
+            StdOut.Flush();
         }
 
         private static void Finished(object sender, TestRunnerFinishedEventArgs e)

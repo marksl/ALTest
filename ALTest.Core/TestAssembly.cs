@@ -36,6 +36,8 @@ namespace ALTest.Core
 
         public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism,  string testAssembly, string resultsFile)
         {
+            StdOut.Init();
+
             var testResults = new List<TestResult>();
             
             _tokenSource = new CancellationTokenSource();
@@ -55,6 +57,8 @@ namespace ALTest.Core
                                           token);
 
             t.Wait();
+
+            StdOut.Flush();
 
             return testResults;
         }

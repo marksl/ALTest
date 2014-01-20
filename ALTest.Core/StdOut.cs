@@ -1,25 +1,38 @@
 ﻿using System;
+using System.IO;
 
 namespace ALTest.Core
 {
     public static class StdOut
     {
-        // TODO: Buffer it. http://msdn.microsoft.com/en-us/library/system.io.textwriter.writelineasync(v=vs.110).aspx
         public static bool Silent { get; set; }
-        
+
         public static void WriteLine()
         {
             if (!Silent)
             {
-                Console.Out.WriteLine();
+                standardOutput.WriteLine();
             }
+        }
+
+        static private TextWriter standardOutput;
+
+        public static void Init()
+        {
+            standardOutput = new StreamWriter(Console.OpenStandardOutput(8000));
+            standardOutput = TextWriter.Synchronized(standardOutput);
+        }
+
+        public static void Flush()
+        {
+            standardOutput.Flush();
         }
 
         public static void WriteLine(string format, params object[] args)
         {
             if (!Silent)
             {
-                Console.WriteLine(format, args);
+                standardOutput.WriteLine(format, args);
             }
         }
 
@@ -27,7 +40,7 @@ namespace ALTest.Core
         {
             if (!Silent)
             {
-                Console.Write(format, args);
+                standardOutput.Write(format, args);
             }
         }
     }
