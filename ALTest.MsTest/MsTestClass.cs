@@ -20,5 +20,13 @@ namespace ALTest.MsTest
                 classInit.Invoke(null, new object[] {new MsTestContext()});
             }
         }
+
+        protected override void RunClassCleanup()
+        {
+            foreach (var classCleanup in ClassCleanup)
+            {
+                classCleanup.Invoke(null, null);
+            }
+        }
     }
 }

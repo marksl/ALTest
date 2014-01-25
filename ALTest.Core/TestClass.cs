@@ -6,9 +6,9 @@ using System.Threading;
 
 namespace ALTest.Core
 {
-    public abstract class TestClass
+    public class TestClass
     {
-        protected TestClass(Type classType)
+        public TestClass(Type classType)
         {
             _classType = classType;
 
@@ -49,8 +49,6 @@ namespace ALTest.Core
         public List<MethodInfo> TestCleanup { get; set; }
 
         public List<TestMethod> TestMethods { get; set; }
-        
-        public delegate object MyMethodInvoker(object obj);
 
         public TestMethod AddMethodTestrun(MethodInfo method, Type expectedException)
         {
@@ -98,7 +96,8 @@ namespace ALTest.Core
             get { return _classType.IsSealed && _classType.IsAbstract; }
         }
 
-        protected abstract void RunClassInitialize();
+        protected virtual void RunClassInitialize() {}
+        protected virtual void RunClassCleanup() { }
 
         public List<TestResult> Run(CancellationToken ct, ITestRunner testRunner)
         {
@@ -203,15 +202,11 @@ namespace ALTest.Core
                 }
             }
 
-            // Class Cleanup
-            foreach (var classCleanup in ClassCleanup)
+            try
             {
-                try
-                {
-                    classCleanup.Invoke(null, null);
-                }
-                catch { }
+                RunClassCleanup();
             }
+            catch { }
 
             return results;
         }

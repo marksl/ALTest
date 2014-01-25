@@ -15,8 +15,8 @@ namespace ALTest.MsTest
             }
         }
 
+        // TODO: Move this to the test class
         public PropertyInfo TestContextMethod { get; set; }
-
         public void TestInitialize(object instance, string testName, TestClass testClass)
         {
             var context = new MsTestContext();

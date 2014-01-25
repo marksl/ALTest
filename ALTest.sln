@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALTest.Console", "ALTest.Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALTest.UI", "ALTest.UI\ALTest.UI.csproj", "{B2E467E9-2E04-43BC-B51E-126D4897A4F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALTest.Xunit", "ALTest.Xunit\ALTest.Xunit.csproj", "{06C55953-E397-488B-807B-F073ECD17FB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{B2E467E9-2E04-43BC-B51E-126D4897A4F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2E467E9-2E04-43BC-B51E-126D4897A4F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2E467E9-2E04-43BC-B51E-126D4897A4F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06C55953-E397-488B-807B-F073ECD17FB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06C55953-E397-488B-807B-F073ECD17FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06C55953-E397-488B-807B-F073ECD17FB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06C55953-E397-488B-807B-F073ECD17FB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
