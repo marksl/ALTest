@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using ALTest.Core;
 
@@ -29,14 +28,6 @@ namespace ALTest.MsTest
             {
                 TestContextMethod.SetValue(instance, context, null);
             }
-        }
-
-        public void WriteResults(DateTime start, DateTime finish, 
-            ICollection<TestResult> results, 
-            Dictionary<string, ICollection<TestResult>> assemblyResults, 
-            string fileName)
-        {
-            MsTestResultsFile.WriteResults(start, finish, results, assemblyResults, fileName);
         }
     }
 }

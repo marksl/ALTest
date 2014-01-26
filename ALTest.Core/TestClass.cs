@@ -8,6 +8,15 @@ namespace ALTest.Core
 {
     public class TestClass
     {
+        public static List<Type> fff = new List<Type>();
+        public static void CreateAllFixtures()
+        {
+            foreach (var f in fff)
+            {
+                var instance = Activator.CreateInstance(f);
+            }
+        }
+
         public TestClass(Type classType)
         {
             _classType = classType;
@@ -99,7 +108,7 @@ namespace ALTest.Core
         protected virtual void RunClassInitialize() {}
         protected virtual void RunClassCleanup() { }
 
-        public List<TestResult> Run(CancellationToken ct, ITestRunner testRunner)
+        public virtual List<TestResult> Run(CancellationToken ct, ITestRunner testRunner)
         {
             var results = new List<TestResult>(100);
 
@@ -235,7 +244,10 @@ namespace ALTest.Core
 
         private static Action CreateMethod(object instance, MethodInfo testMethod)
         {
-            return (Action)Delegate.CreateDelegate(typeof(Action), instance, testMethod, true);
+            if (testMethod.IsStatic)
+                return (Action) Delegate.CreateDelegate(typeof (Action), testMethod, true);
+
+            return (Action) Delegate.CreateDelegate(typeof (Action), instance, testMethod, true);
         }
     }
 }

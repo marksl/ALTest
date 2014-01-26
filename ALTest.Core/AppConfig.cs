@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -7,9 +8,9 @@ namespace ALTest.Core
 {
     public abstract class AppConfig : IDisposable
     {
-        public static AppConfig Change(string path)
+        public static AppConfig Change(string configFile, string directory)
         {
-            return new ChangeAppConfig(path);
+            return new ChangeAppConfig(configFile, directory);
         }
 
         public abstract void Dispose();
@@ -21,14 +22,18 @@ namespace ALTest.Core
 
             private bool disposedValue;
 
-            private readonly string _path;
+            private readonly string _oldDirectory;
+            private readonly string _configFile;
 
-            public ChangeAppConfig(string path)
+            public ChangeAppConfig(string configFile, string directory)
             {
-                _path = path;
-                if (path != null)
+                _configFile = configFile;
+                _oldDirectory = Directory.GetCurrentDirectory();
+
+                Directory.SetCurrentDirectory(directory);
+                if (configFile != null)
                 {
-                    AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", path);
+                    AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", configFile);
                     ResetConfigMechanism();
                 }
             }
@@ -37,11 +42,13 @@ namespace ALTest.Core
             {
                 if (!disposedValue)
                 {
-                    if (_path != null)
+                    if (_configFile != null)
                     {
                         AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", oldConfig);
                         ResetConfigMechanism();
                     }
+
+                    Directory.SetCurrentDirectory(_oldDirectory);
 
                     disposedValue = true;
                 }

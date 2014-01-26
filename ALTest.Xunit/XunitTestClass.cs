@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ALTest.Core;
 
@@ -18,7 +19,9 @@ namespace ALTest.Xunit
         public void AddFixture(Type fixtureType)
         {
             fixtures.Add(fixtureType, null);
+            fff.Add(fixtureType);
         }
+
 
         // Invoke SetFixture for each of the IUseFixture<> interfaces.
         // This is done for each test intialize
@@ -30,11 +33,18 @@ namespace ALTest.Xunit
             }
         }
 
+        //public override List<TestResult> Run(System.Threading.CancellationToken ct, ITestRunner testRunner)
+        //{
+        //    // TODO: Probably have to pretty much implement this whole thing... again.
+        //    throw new NotImplementedException();   
+        //}
+
         private readonly Dictionary<Type, Tuple<MethodInfo, object>> fixtures;
 
         protected override void RunClassInitialize()
         {
-            foreach (var t in fixtures.Keys)
+            Type[] keyCollection = fixtures.Keys.Select(x => x).ToArray();
+            foreach (var t in keyCollection)
             {
                 var instance = Activator.CreateInstance(t);
                 var methodInfo = _classType.GetMethod("SetFixture", new[] {t});
@@ -44,9 +54,9 @@ namespace ALTest.Xunit
 
         protected override void RunClassCleanup()
         {
-            foreach (var tuple in fixtures.Values)
+            object[] valueCollection = fixtures.Values.Select(x=>x.Item2).ToArray();
+            foreach (var instance in valueCollection)
             {
-                var instance = tuple.Item2;
                 var disposable = instance as IDisposable;
                 if (disposable != null) disposable.Dispose();
             }

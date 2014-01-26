@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ALTest.Core.Configuration;
 using ALTest.Core.FileSynchronization;
+using ALTest.Core.TestResults;
 
 namespace ALTest.Core
 {
@@ -49,8 +50,7 @@ namespace ALTest.Core
                 var testResults = _testAssembly.RunTests(assembly.Assembly,
                                                          assembly.Parallel,
                                                          assembly.DegreeOfParallelism,
-                                                         configuration.TestAssembly,
-                                                         configuration.ResultsFile);
+                                                         configuration.TestAssembly);
 
                 assemblyResults.Add(assembly.Assembly, testResults);
 
@@ -64,15 +64,9 @@ namespace ALTest.Core
             stopWatch.Stop();
             DateTime end = DateTime.Now;
 
-            ITestFactory factory = TestFactoryLoader.Load(configuration.TestAssembly);
-            var testRunner = factory.CreateTestRunner();
-
             List<TestResult> flattendResults = assemblyResults.Values.SelectMany(x => x).ToList();
-            if (configuration.ResultsFile != null)
-            {
-                testRunner.WriteResults(start, end, flattendResults, assemblyResults, configuration.ResultsFile);
-            }
-            
+            TestResultsWriter.WriteResults(start, end, flattendResults, assemblyResults);
+
             var failures = flattendResults.Where(c => !c.TestPassed).ToList();
             return new TestRunResult(stopWatch.ElapsedMilliseconds, failures, flattendResults.Count);
         }

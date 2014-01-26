@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -34,8 +35,11 @@ namespace ALTest.Core
             _tokenSource.Cancel();
         }
 
-        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism,  string testAssembly, string resultsFile)
+        private string _oldPath;
+
+        public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism,  string testAssembly)
         {
+            
             StdOut.Init();
 
             var testResults = new List<TestResult>();
@@ -47,7 +51,8 @@ namespace ALTest.Core
                                                   ITestFactory factory = TestFactoryLoader.Load(testAssembly);
                                                   _testLoader = factory.CreateTestLoader();
                                                   _testRunner = factory.CreateTestRunner();
-
+                                                  var fi = new FileInfo(assembly);
+                                                  AppDomain.CurrentDomain.SetData("APPBASE", fi.Directory.FullName);
                                                   if (TryLoadTestsFromAssembly(assembly, token))
                                                   {
                                                       List<TestResult> results = Run(parallel, degreeOfParallelism, token);
@@ -69,6 +74,12 @@ namespace ALTest.Core
             _configFile = configFilePath;
         }
 
+        private string _directory;
+        private void SetDirectory(string assemblyDirectory)
+        {
+            _directory = assemblyDirectory;
+        }
+
         private bool TryLoadTestsFromAssembly(string assembly, CancellationToken ct)
         {
             StdOut.WriteLine("Loading {0}...", assembly);
@@ -84,6 +95,10 @@ namespace ALTest.Core
             // Add static classes
             types.AddRange(allClasses.Where(t => t.IsSealed && t.IsAbstract));
 
+            var fileInfo = new FileInfo(ass.Location);
+            string assemblyDirectory = fileInfo.DirectoryName;
+
+            SetDirectory(assemblyDirectory);
             var configFilePath = ass.Location + ".config";
             if (File.Exists(configFilePath))
             {
@@ -103,6 +118,7 @@ namespace ALTest.Core
 
         private List<TestResult> Run(bool parallel, int? degreeOfParallelism, CancellationToken ct)
         {
+            Debug.Listeners.Clear();
             StdOut.WriteLine("Starting execution...");
             StdOut.WriteLine();
 
@@ -113,8 +129,9 @@ namespace ALTest.Core
 
             var results = new List<TestResult>();
 
-            using (AppConfig.Change(_configFile))
+            using (AppConfig.Change(_configFile, _directory))
             {
+                //TestClass.CreateAllFixtures();
                 try
                 {
                     _testRunner.AssemblyInitialize(AssemblyInitialize);

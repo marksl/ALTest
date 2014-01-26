@@ -25,7 +25,7 @@ namespace ALTest.Xunit
                 testClass.AddFixture(args[0]);
             }
 
-            foreach (var method in methods)
+            foreach (var method in methods)//.Where(x => x.Name == "Can_setup_decorator_pattern"))
             {
                 object[] methodAttributes = method.GetCustomAttributes(false);
 
@@ -37,7 +37,7 @@ namespace ALTest.Xunit
 
                 if (testCleanup != null)
                 {
-                    testClass.TestCleanup.Add(testCleanup);
+                    testClass.ClassCleanup.Add(testCleanup);
                 }
             }
 

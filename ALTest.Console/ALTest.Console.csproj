@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\build\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +26,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\build\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -44,10 +44,6 @@
     <ProjectReference Include="..\ALTest.Core\ALTest.Core.csproj">
       <Project>{6407cc90-2440-4b5c-9ffb-3c1d01946e0a}</Project>
       <Name>ALTest.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ALTest.MsTest\ALTest.MsTest.csproj">
-      <Project>{3cd81ded-7822-4f8b-9b3a-cc633c2d2416}</Project>
-      <Name>ALTest.MsTest</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

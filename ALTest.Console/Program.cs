@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using ALTest.Core;
 using ALTest.Core.Configuration;
+using ALTest.Core.TestResults;
 
 namespace ALTest.Console
 {
@@ -82,6 +83,7 @@ namespace ALTest.Console
                 }
             }
 
+            // TODO: Remove this 
             string testRunner = args.SingleOrDefault(a => a.StartsWith(testRunnerPrefix, StringComparison.InvariantCultureIgnoreCase));
             testRunner = testRunner == null
                              ? Path.Combine(Directory.GetCurrentDirectory(), "ALTest.MsTest.dll")
@@ -91,7 +93,10 @@ namespace ALTest.Console
             if (resultsFile != null)
             {
                 resultsFile = resultsFile.Substring(resultsFilePrefix.Length, resultsFile.Length - resultsFilePrefix.Length);
+                TestResultsWriter.MsTestResultsFileName = resultsFile;
             }
+
+            // TODO: Run in place. Don't copy test files. /runinplace. Similar to /noshadow for xunit.
 
             // MStest - Initially only need to support 
             // TODO:  /detail: !!! stacktrace, etc
@@ -99,7 +104,7 @@ namespace ALTest.Console
             // ALTest
             // TODO:  /testcontainer-parallel-strategy-5:Footests.dll
 
-            var configuration = new RuntimeConfiguration(workingFolder, assemblyList, testRunner, false, resultsFile);
+            var configuration = new RuntimeConfiguration(workingFolder, assemblyList, testRunner, false);
             var runner = new TestRunner();
             runner.Finished += Finished;
             var task = runner.Start(DateTime.Now, configuration);
