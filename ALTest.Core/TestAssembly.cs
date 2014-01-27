@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -51,6 +52,7 @@ namespace ALTest.Core
                                                   _testRunner = factory.CreateTestRunner();
                                                   var fi = new FileInfo(assembly);
                                                   AppDomain.CurrentDomain.SetData("APPBASE", fi.Directory.FullName);
+                                                  
                                                   if (TryLoadTestsFromAssembly(assembly, token))
                                                   {
                                                       List<TestResult> results = Run(parallel, degreeOfParallelism, token);
@@ -129,6 +131,7 @@ namespace ALTest.Core
 
             using (AppConfig.Change(_configFile, _directory))
             {
+                ConfigurationManager.RefreshSection("runtime");
                 //TestClass.CreateAllFixtures();
                 try
                 {
