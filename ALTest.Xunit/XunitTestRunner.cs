@@ -13,12 +13,7 @@ namespace ALTest.Xunit
 
         public void TestInitialize(object instance, string testName, TestClass testClass)
         {
-            ((XunitTestClass)testClass).InvokeTestInitialize(instance, testName);
-        }
-
-        public void WriteResults(DateTime start, DateTime finish, ICollection<TestResult> results, Dictionary<string, ICollection<TestResult>> resultsGroupedByAssembly, string fileName)
-        {
-            // TODO: Separate this out.
+            throw new NotSupportedException();
         }
     }
 }

@@ -32,7 +32,14 @@ namespace ALTest.Xunit
                 var fact = (FactAttribute) methodAttributes.FirstOrDefault(c => c as FactAttribute != null);
                 if (fact != null && fact.Skip == null)
                 {
-                    testClass.AddMethodTestrun(method, null);
+                    //testClass.AddMethodTestrun(method, null);
+                    testClass.XunitMethods.Add(
+                        new XunitTestMethod
+                            {
+                                Fact = fact,
+                                Method = method
+                                }
+                        );
                 }
 
                 if (testCleanup != null)

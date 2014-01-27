@@ -35,8 +35,6 @@ namespace ALTest.Core
             _tokenSource.Cancel();
         }
 
-        private string _oldPath;
-
         public ICollection<TestResult> RunTests(string assembly, bool parallel, int? degreeOfParallelism,  string testAssembly)
         {
             

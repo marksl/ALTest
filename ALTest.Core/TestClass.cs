@@ -220,7 +220,7 @@ namespace ALTest.Core
             return results;
         }
 
-        private void AddResult(ICollection<TestResult> results, TestMethod testMethod, Exception exception, 
+        protected void AddResult(ICollection<TestResult> results, TestMethod testMethod, Exception exception, 
             DateTime start, Stopwatch watch)
         {
             StdOut.Write("{0,-22}", exception == null ? "Passed" : "Failed");

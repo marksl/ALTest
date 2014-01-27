@@ -20,6 +20,16 @@ namespace ALTest.Core
             }
         }
 
+        public TestResult(string testName, bool testPassed,
+                          string className, string exceptionString, 
+                            string exceptionMessage, string exceptionStackTrace)
+            :this(testName, testPassed, className,null)
+        {
+            ExceptionString = exceptionString;
+            ExceptionMessage = exceptionMessage;
+            ExceptionStackTrace = exceptionStackTrace;
+        }
+
         public TestResult()
         {
         }
