@@ -84,6 +84,7 @@ namespace ALTest.Core
         {
             StdOut.WriteLine("Loading {0}...", assembly);
 
+            
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
             Assembly ass = Assembly.LoadFile(assembly);
 
@@ -218,6 +219,16 @@ namespace ALTest.Core
                                 ass = Assembly.LoadFile(fullPath);
                             }
                         }
+
+                        // Handle PCL errors...
+                        if (ass == null && args.Name.StartsWith("System, Version=2.0.5.0"))
+                            ass = Assembly.Load("System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+
+                        if (ass == null && args.Name.StartsWith("System.Core, Version=2.0.5.0"))
+                            ass = Assembly.Load("System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+
+                        if (ass == null && args.Name.StartsWith("System.Xml, Version=2.0.5.0"))
+                            ass = Assembly.Load("System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
                     }
 
                     asses.Add(dll, ass);

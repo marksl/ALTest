@@ -36,7 +36,7 @@ namespace ALTest.Xunit
 
             foreach (var method in methods)//.Where(x => x.Name == "Can_setup_decorator_pattern"))
             {
-                object[] methodAttributes = method.GetCustomAttributes(false);
+                object[] methodAttributes = method.GetCustomAttributes(true);
 
                 var fact = (FactAttribute) methodAttributes.FirstOrDefault(c => c as FactAttribute != null);
                 if (fact != null && fact.Skip == null)
