@@ -147,24 +147,26 @@ namespace ALTest.Core
                     if (ct.IsCancellationRequested)
                         return new List<TestResult>();
 
-                    object instance = Activator.CreateInstance(_classType);
-                    testRunner.TestInitialize(instance, testMethod.Method.Name, this);
-                    
                     Exception exception = null;
-                    // Test Initialize
-                    foreach (var testInit in TestInitialize)
-                    {
-                        Action a = CreateMethod(instance, testInit);
 
-                        try
+                    object instance = null;
+
+                    try
+                    {
+                        instance = Activator.CreateInstance(_classType);
+                        testRunner.TestInitialize(instance, testMethod.Method.Name, this);
+
+                        // Test Initialize
+                        foreach (var testInit in TestInitialize)
                         {
+                            Action a = CreateMethod(instance, testInit);
+
                             RunMethod(a);
                         }
-                        catch (Exception e)
-                        {
-                            exception = e;
-                            break;
-                        }
+                    }
+                    catch (Exception e)
+                    {
+                        exception = e;
                     }
 
                     if (exception != null)
@@ -220,21 +222,27 @@ namespace ALTest.Core
             return results;
         }
 
-        protected void AddResult(ICollection<TestResult> results, TestMethod testMethod, Exception exception, 
-            DateTime start, Stopwatch watch)
+        protected void AddResult(ICollection<TestResult> results, string testMethodName, Exception exception,
+                                 DateTime start, Stopwatch watch)
         {
             StdOut.Write("{0,-22}", exception == null ? "Passed" : "Failed");
-            StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
+            StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethodName);
 
-            var testResult = new TestResult(testMethod.Method.Name, exception == null, _classType.FullName, exception)
-                                 {
-                                     Duration = watch.Elapsed,
-                                     StartTime = start,
-                                     EndTime = DateTime.Now
-                                 };
+            var testResult = new TestResult(testMethodName, exception == null, _classType.FullName, exception)
+            {
+                Duration = watch.Elapsed,
+                StartTime = start,
+                EndTime = DateTime.Now
+            };
             results.Add(testResult);
 
             watch.Restart();
+        }
+
+        protected void AddResult(ICollection<TestResult> results, TestMethod testMethod, Exception exception,
+                                 DateTime start, Stopwatch watch)
+        {
+            AddResult(results, testMethod.Method.Name, exception, start, watch);
         }
 
         private static void RunMethod(Action a)

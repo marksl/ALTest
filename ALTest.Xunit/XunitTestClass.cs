@@ -20,6 +20,7 @@ namespace ALTest.Xunit
     public class XunitTestClass : TestClass
     {
         public List<XunitTestMethod> XunitMethods { get; set; }
+        public RunWithAttribute RunWith { get; set; }
 
         private readonly Type _classType;
         public XunitTestClass(Type classType)
@@ -60,6 +61,36 @@ namespace ALTest.Xunit
             DateTime start = DateTime.Now;
             var watch = Stopwatch.StartNew();
 
+
+            // Total hack to handle custom ClassCommands.
+            ITestClassCommand classCommand = null;
+
+            // Dear god. this frankenstein code works.. blech.
+            if (this.RunWith != null)
+            {
+                classCommand = (ITestClassCommand) Activator.CreateInstance(RunWith.TestClassCommand);
+                classCommand.TypeUnderTest = Reflector.Wrap(_classType);
+
+                Predicate<ITestResult> resultCallback =
+                    (x) =>
+                        {
+                            var sucess = x as PassedResult;
+                            if (sucess != null)
+                            {
+                                AddResult(results, sucess.MethodName, allException, start, watch);
+                            }
+                            var fail = x as FailedResult;
+                            if (fail != null)
+                            {
+                                AddResult(results, fail.MethodName, fail.Output, fail.Message, fail.StackTrace, start, watch);
+                            }
+
+                            return true;
+                        };
+                TestClassCommandRunner.Execute(classCommand, null, null, resultCallback);
+                return results;
+            }
+
             // Class Initialize
             try
             {
@@ -69,6 +100,8 @@ namespace ALTest.Xunit
             {
                 allException = e;
             }
+
+
 
             if (allException != null)
             {
@@ -85,15 +118,29 @@ namespace ALTest.Xunit
                 if (ct.IsCancellationRequested)
                     return new List<TestResult>();
 
-                var methodInfo = Reflector.Wrap(testMethod.Method);
-                foreach (var command in  testMethod.Fact.CreateTestCommands(methodInfo))
+                foreach (ITestCommand command in  GetCommands(classCommand, testMethod))
                 {
-                    object instance = Activator.CreateInstance(_classType);
-                    InvokeTestInitialize(instance, testMethod.Method.Name);
-
                     try
                     {
-                        MethodResult result = command.Execute(instance);
+                        IMethodInfo method = Reflector.Wrap(testMethod.Method);
+                        ITestCommand wrappedCommand = new BeforeAfterCommand(command, testMethod.Method);
+
+                        if (command.ShouldCreateInstance)
+                            wrappedCommand = new LifetimeCommand(wrappedCommand,  method);
+
+                        wrappedCommand = new ExceptionAndOutputCaptureCommand(wrappedCommand, method);
+                        wrappedCommand = new TimedCommand(wrappedCommand);
+
+                        if (wrappedCommand.Timeout > 0)
+                            wrappedCommand = new TimeoutCommand(wrappedCommand, wrappedCommand.Timeout, method);
+
+
+
+                        object instance = Activator.CreateInstance(_classType);
+                        InvokeTestInitialize(instance, testMethod.Method.Name);
+
+                        
+                        MethodResult result = wrappedCommand.Execute(instance);
                         if (result is PassedResult)
                         {
                             AddResult(results, new TestMethod {Method = testMethod.Method}, null, start, watch);
@@ -119,20 +166,35 @@ namespace ALTest.Xunit
             try
             {
                 RunClassCleanup();
+
+                if (classCommand != null)
+                    classCommand.ClassFinish();
             }
             catch { }
 
             return results;
         }
 
-        protected void AddResult(ICollection<TestResult> results, TestMethod testMethod, string exceptionString,
+        private IEnumerable<ITestCommand> GetCommands(ITestClassCommand command, XunitTestMethod testMethod)
+        {
+            var methodInfo = Reflector.Wrap(testMethod.Method);
+
+            if (command !=null)
+            {
+                return command.EnumerateTestCommands(methodInfo);
+            }
+
+            return testMethod.Fact.CreateTestCommands(methodInfo);
+        }
+
+        protected void AddResult(ICollection<TestResult> results, string testMethodName, string exceptionString,
             string exceptionMessage, string exceptionStacktrace,
             DateTime start, Stopwatch watch)
         {
             StdOut.Write("{0,-22}", exceptionString == null ? "Passed" : "Failed");
-            StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethod.Method.Name);
+            StdOut.WriteLine("{0}.{1}", _classType.FullName, testMethodName);
 
-            var testResult = new TestResult(testMethod.Method.Name, exceptionString == null, _classType.FullName, exceptionString,
+            var testResult = new TestResult(testMethodName, exceptionString == null, _classType.FullName, exceptionString,
                 exceptionMessage, exceptionStacktrace)
             {
                 Duration = watch.Elapsed,

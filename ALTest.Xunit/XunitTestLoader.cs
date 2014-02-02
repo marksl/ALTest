@@ -11,8 +11,17 @@ namespace ALTest.Xunit
         public void Load(Type type, ITestAssembly assembly)
         {
             var testClass = new XunitTestClass(type);
+
+
             assembly.AddTestClass(testClass);
             var methods = type.GetMethods().OrderBy(m => m.Name);
+
+            var runWith = (RunWithAttribute) type.GetCustomAttributes(typeof (RunWithAttribute), true).FirstOrDefault();
+            if (runWith != null)
+            {
+                testClass.RunWith = runWith;
+
+            }
 
             bool idisposable = type.IsAssignableFrom(typeof (IDisposable));
             MethodInfo testCleanup = idisposable ? type.GetMethod("Dispose") : null;
